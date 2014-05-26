@@ -25,8 +25,35 @@ sub request_handler {
   $queryvars = $method eq 'GET' ? $req->query_parameters : $req->body_parameters;
   
   # this is probably inside out, but some of the logic inside seems promising
-  foreach my $req_section (@path_arr) {
-    foreach my $route ($$routes{$method}) {
+  #foreach my $req_section (@path_arr) {
+    #foreach my $route ($$routes{$method}) {
+      #foreach my $section ($$route{path_arr}) {
+        #my $match = 1;
+        
+        #if(!$$section{handler}) {
+          #if((index $section, ':') != -1) { # anything goes
+            ##$queryvars->section
+          #}
+          #else { # match via string comparison
+            ##$match = 0 unless $something eq $something
+          #}
+        #}
+        #else { # match via handler
+          #$match = 0 unless $$section{handler}->($req_section);
+        #}
+      #}
+      
+      ## return $$route{handler}->($queryvars) if $match;
+      ## we can probably return the sub reference here
+    #}
+  #}
+  
+  # haven't ran through this version in my head yet
+  # slightly modified of above
+  foreach my $route ($$routes{$method) {
+    my $match = 1;
+    
+    foreach $req_section (@path_arr) {
       foreach my $section ($$route{path_arr}) {
         my $match = 1;
         
@@ -42,9 +69,6 @@ sub request_handler {
           $match = 0 unless $$section{handler}->($req_section);
         }
       }
-      
-      # return $$route{handler}->($queryvars) if $match;
-      # we can probably return the sub reference here
     }
   }
   
