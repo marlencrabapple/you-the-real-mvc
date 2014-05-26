@@ -27,9 +27,11 @@ sub request_handler {
   foreach my $req_section (@path_arr) {
     foreach my $route ($$routes{$method}) {
       foreach my $section ($$route{path_arr}) {
+        my $match = 0;
+        
         if(!$$section{handler}) {
           if((index $section, ':') != -1) { # anything goes
-            
+            #$queryvars->section
           }
           else { # match via string comparison
             
@@ -39,6 +41,10 @@ sub request_handler {
           
         }
       }
+      
+      # return $$route{handler}->($queryvars) if $match;
+      # we can probably return the sub reference here
+      # i'll assume 
     }
   }
   

@@ -8,35 +8,6 @@ use Data::Dumper;
 
 our @EXPORT = qw(get post $routes);
 
-#
-# Dispatch Table Structure
-#
-
-#{
-#  GET => [
-#    { 
-#      path_str => ''
-#      path_arr => [
-#        { 
-#          var => '',
-#          handler => sub { }
-#        }
-#      ]
-#    }
-#  ],
-#  POST => [
-#    { 
-#      path_str => ''
-#      path_arr => [
-#        { 
-#          var => '',
-#          handler => sub { }
-#        }
-#      ]
-#    }
-#  ]
-#};
-
 our $routes = {
   GET => [],
   POST => []
@@ -58,25 +29,19 @@ sub add_route {
   my ($method,$path,$sub,$pathhandlers) = @_;
   
   push $$routes{$method}, {
+    handler => $sub,
     path_str => $path,
-    path_arr => [ 
-      map { 
-        $_ ? sub { 
-          return { 
+    path_arr => [
+      map {
+        $_ ? sub {
+          return {
             var => $_,
             handler => (index $_, ':') == 0 ? $$pathhandlers{ substr $_,1 } : undef
-          } 
+          }
         }->() : ()
       } split '/', $path
     ]
   };
-  
-  #push $$routes{$method}, $dispatch_obj;
-  
-  #push $$routes{$method}, {
-  #  path_str => $path,
-  #  path_arr => (map { { var => $_, handler => (index($_,':') ? $pathhandlers{substr($_,1)} : undef) } } split '/', $path)
-  #};
 }
 
 1;
