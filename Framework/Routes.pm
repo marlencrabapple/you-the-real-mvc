@@ -73,7 +73,6 @@ sub add_route {
   
   #push $$routes{$method}, $dispatch_obj;
   
-  
   #push $$routes{$method}, {
   #  path_str => $path,
   #  path_arr => (map { { var => $_, handler => (index($_,':') ? $pathhandlers{substr($_,1)} : undef) } } split '/', $path)

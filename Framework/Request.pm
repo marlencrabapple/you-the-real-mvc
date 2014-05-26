@@ -19,10 +19,30 @@ sub request_handler {
   $req = Plack::Request->new($env);
   $path = $req->path_info;
   $method = $req->method;
+  @path_arr = map { $_ ? $_ : () } split '/', $path;
   
-  die Dumper($self,$env,$req,$path,$method,$routes);
+  # add traditional query vars. path vars get appended later.
+  $queryvars = $method eq 'GET' ? $req->query_parameters : $req->body_parameters;
   
-  @patharr = split '/', @path;
+  foreach my $req_section (@path_arr) {
+    foreach my $route ($$routes{$method}) {
+      foreach my $section ($$route{path_arr}) {
+        if(!$$section{handler}) {
+          if((index $section, ':') != -1) { # anything goes
+            
+          }
+          else { # match via string comparison
+            
+          }
+        }
+        else { # match via handler
+          
+        }
+      }
+    }
+  }
+  
+  die Dumper($self,$env,$req,$path,\@path_arr,$method,$routes);
   
   #if($$routes{) {
   #}
