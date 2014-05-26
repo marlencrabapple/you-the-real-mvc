@@ -24,27 +24,27 @@ sub request_handler {
   # add traditional query vars. path vars get appended later.
   $queryvars = $method eq 'GET' ? $req->query_parameters : $req->body_parameters;
   
+  # this is probably inside out, but some of the logic inside seems promising
   foreach my $req_section (@path_arr) {
     foreach my $route ($$routes{$method}) {
       foreach my $section ($$route{path_arr}) {
-        my $match = 0;
+        my $match = 1;
         
         if(!$$section{handler}) {
           if((index $section, ':') != -1) { # anything goes
             #$queryvars->section
           }
           else { # match via string comparison
-            
+            #$match = 0 unless $something eq $something
           }
         }
         else { # match via handler
-          
+          $match = 0 unless $$section{handler}->($req_section);
         }
       }
       
       # return $$route{handler}->($queryvars) if $match;
       # we can probably return the sub reference here
-      # i'll assume 
     }
   }
   
