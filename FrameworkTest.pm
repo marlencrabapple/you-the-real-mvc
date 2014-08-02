@@ -4,6 +4,8 @@ use strict;
 use lib '.';
 use parent 'Framework';
 
+use Data::Dumper;
+
 sub build {
   my $self = shift;
 
@@ -14,10 +16,10 @@ sub build {
   $self->get('/foo/:id', sub {
     my ($params) = @_;
 
-    $self->res('Hello, Foo!');
+    $self->res("Hello, $params->{id}!");
   }, {
     id => sub {
-      /[0-9]+/;
+      return shift =~ /^[0-9]+$/;
     }
   });
 }

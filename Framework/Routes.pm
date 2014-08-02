@@ -1,5 +1,6 @@
 package Framework::Routes;
 
+use strict;
 use base qw(Exporter);
 use Plack::Util;
 use Plack::Request;

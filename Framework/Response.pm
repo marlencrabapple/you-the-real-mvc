@@ -1,5 +1,6 @@
 package Framework::Response;
 
+use strict;
 use base qw(Exporter);
 use Plack::Util;
 use Plack::Request;
@@ -12,16 +13,22 @@ our @EXPORT = (
 );
 
 sub make_error {
-  
+  my ($status,$content,$contenttype) = @_;
+
+  return [
+    $status || 500,
+    ['Content-type', $contenttype || 'text/html'],
+    [$content]
+  ]
 }
 
 sub res {
-  my ($self,$content,$contenttype,$statuscode) = @_;
-  
+  my ($self,$content,$contenttype,$status) = @_;
+
   return [
     $status || 200,
-    [ 'Content-type', $contenttype || 'text/html' ],
-    [ $content ]
+    ['Content-type', $contenttype || 'text/html'],
+    [$content]
   ]
 }
 

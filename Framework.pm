@@ -1,10 +1,12 @@
 package Framework;
 
+use strict;
 use base 'Exporter';
 use Plack;
 use Plack::Util;
 use Framework::Routes;
 use Framework::Request;
+use Framework::Strings;
 use Framework::Response;
 use Framework::Database;
 
