@@ -15,19 +15,19 @@ our $routes = {
 
 sub get {
   my ($self,$path,$sub,$pathhandlers) = @_;
-  
+
   add_route('GET',$path,$sub,$pathhandlers);
 }
 
 sub post {
   my ($self,$path,$sub,$pathhandlers) = @_;
-  
+
   add_route('POST',$path,$sub,$pathhandlers);
 }
 
 sub add_route {
   my ($method,$path,$sub,$pathhandlers) = @_;
-  
+
   push $$routes{$method}, {
     handler => $sub,
     path_str => $path,
@@ -36,7 +36,7 @@ sub add_route {
         $_ ? sub {
           return {
             var => $_,
-            handler => (index $_, ':') == 0 ? $$pathhandlers{ substr $_,1 } : undef
+            handler => (index $_, ':') == 0 ? $$pathhandlers{ substr $_, 1 } : undef
           }
         }->() : ()
       } split '/', $path
