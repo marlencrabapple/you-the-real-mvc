@@ -7,4 +7,8 @@ use Plack::Util;
 use Plack::Request;
 use Plack::Response;
 
+sub get_decoded_hashref {
+  my ($sth) = @_;
+}
+
 1;
