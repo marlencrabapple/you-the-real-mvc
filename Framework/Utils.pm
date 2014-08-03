@@ -2,9 +2,18 @@ package Framework::Utils;
 
 use base qw(Exporter);
 
+our ($options) = { global => {} };
 our @EXPORT = (
-  qw/encode_string decode_string clean_string/
+  qw/$options, get_option get_ip encode_string decode_string clean_string/
 );
+
+sub get_option {
+
+}
+
+sub get_ip {
+  
+}
 
 sub encode_string {
 
