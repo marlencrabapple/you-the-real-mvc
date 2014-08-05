@@ -14,6 +14,9 @@ use Framework::Database;
 use Framework::Request;
 use Framework::Response;
 
+my $before_process_request;
+
+our $_self;
 our @EXPORT = (
   @Framework::Strings::EXPORT,
   @Framework::Utils::EXPORT,
@@ -22,7 +25,7 @@ our @EXPORT = (
   @Framework::Response::EXPORT,
   @Framework::Database::EXPORT,
   @Framework::Template::EXPORT,
-  qw(new build run env)
+  qw($_self new build run env)
 );
 
 #
@@ -41,12 +44,19 @@ sub build {
 
 sub run {
   my ($self) = @_;
+  $_self = $self;
 
   my $app = sub {
+    $before_process_request->();
     $self->request_handler(@_);
   };
 
   return $app;
+}
+
+sub before_process_request {
+  my $self = shift;
+  $before_process_request = shift;
 }
 
 1;

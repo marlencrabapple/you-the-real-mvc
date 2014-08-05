@@ -75,7 +75,7 @@ sub request_handler {
   }
   catch {
     if(get_option('debug_mode',Framework::get_section())) {
-      local $SIG{__DIE__} = 'DEFAULT';
+      local $SIG{__DIE__} = 'DEFAULT'; # thanks http://blog.64p.org/entry/20101109/1289291797
       die $_;
     }
     return get_error();

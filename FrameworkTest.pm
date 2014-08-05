@@ -9,20 +9,20 @@ use FrameworkTest::Config;
 use FrameworkTest::Templates;
 
 #
-# Database init
-#
-
-
-
-#
 # Routes
 #
 
 sub build {
   ($self,$env) = @_;
 
-  $dbh = Framework::Database->new();
-  $board = "";
+  #
+  # Init
+  #
+
+  $self->before_process_request(sub {
+    $dbh = Framework::Database->new();
+    $board = "";
+  });
 
   $self->get('/', sub {
     my ($params) = @_;
@@ -36,26 +36,20 @@ sub build {
     $self->res("Hello, $params->{name}")
   });
 
+  $self->get('/admin/:board', sub {
+    make_admin_page(0);
+  }, {
+    board => sub { board_handler(shift) }
+  });
+
   $self->get('/admin/:board/:page', sub {
     my ($params) = @_;
 
     make_admin_page($params->{page});
   }, {
-    board => sub {
-      my $_board = shift;
-
-      foreach (keys $options) {
-        if($_ eq $_board) {
-          $board = $_;
-          Framework::set_section($_board);
-          return 1;
-        }
-      }
-
-      $self->make_error('Invalid board',404);
-    },
+    board => sub { board_handler(shift) },
     page => sub {
-      return shift =~ /^[0-9]*$/ # no page is fine
+      return shift =~ /^[0-9]+$/
     }
   });
 }
@@ -99,7 +93,21 @@ sub make_admin_page {
     $sth2->execute($$row{num}) or $self->make_error($dbh->errstr);
 
     my $replyoffset = ($sth2->fetchrow_array)[0] - get_option('max_replies_index',$board);
-    $replyoffset = 0 if $replyoffset < 0;
+
+    if($replyoffset < 0) {
+      $replyoffset = 0;
+    }
+    else {
+      @threads[(scalar @threads) - 1]->{omitted} = $replyoffset;
+    }
+
+    my $sth2 = $dbh->prepare("SELECT COUNT(*) FROM "
+      . get_option('sql_post_table',$board)
+      . " WHERE parent=? AND image IS NOT NULL") or $self->make_error($dbh->errstr);
+
+    $sth2->execute($$row{num}) or $self->make_error($dbh->errstr);
+
+    my $imagecount = ($sth2->fetchrow_array)[0];
 
     $sth2 = $dbh->prepare(
       "SELECT * FROM " . get_option('sql_post_table',$board)
@@ -109,10 +117,15 @@ sub make_admin_page {
 
     $sth2->execute($$row{num}) or $self->make_error($dbh->errstr);
 
+    my $visibleimages = 0;
+
     while(my $row2 = get_decoded_hashref($sth2)) {
       $$row2{reported} = defined $$reports{$$row2{num}};
+      $visibleimages++ if $$row2{image};
       push @threads[(scalar @threads) - 1]->{posts}, $row2;
     }
+
+    @threads[(scalar @threads) - 1]->{omittedimages} = $imagecount - $visibleimages;
   }
 
   $self->res($$templates{admin_index_template}->(
@@ -129,6 +142,20 @@ sub make_admin_page {
 
 sub verify_admin {
 
+}
+
+sub board_handler {
+  my $_board = shift;
+
+  foreach (keys $options) {
+    if($_ eq $_board) {
+      $board = $_;
+      Framework::set_section($_board);
+      return 1;
+    }
+  }
+
+  $self->make_error('Invalid board',404);
 }
 
 sub get_reported_posts {

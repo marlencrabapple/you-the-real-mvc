@@ -38,11 +38,15 @@ $$templates{admin_index_template} = compile_template($$sections{main_header}.q{
 <h1><var $title></h1>
   <loop $threads>
     <loop $posts>
-      <div style="background:#ddd;margin-bottom:10px">
-        <var $num>.
+      <div style="background:#ddd;margin:5px 0<if $parent>;margin-left:150px</if>">
+        <!var $num>.
         <blockquote><!var $comment></blockquote>
       </div>
+      <if !$parent>
+      <em>Ommited Replies: <!var $omitted>, Omitted Images: <!var $omittedimages></em>
+      </if>
     </loop>
+    <hr>
   </loop>
 }.$$sections{main_footer});
 
