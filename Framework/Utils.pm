@@ -1,6 +1,9 @@
 package Framework::Utils;
 
 use strict;
+
+use Plack::Util::Accessor qw(rethrow);
+
 use base qw(Exporter);
 use Encode qw(decode encode);
 use Data::Dumper;
@@ -11,7 +14,7 @@ our $_section;
 our ($options) = { global => {} };
 our @EXPORT = (
   @Data::Dumper::EXPORT,
-  qw/$options get_option add_option get_ip forbidden_unicode encode_string decode_string clean_string set_section get_section/
+  qw/$options get_option add_option get_ip forbidden_unicode encode_string decode_string clean_string set_section get_section rethrow/
 );
 
 sub get_option {

@@ -15,13 +15,14 @@ use Framework::Request;
 use Framework::Response;
 
 our @EXPORT = (
+  @Framework::Strings::EXPORT,
   @Framework::Utils::EXPORT,
   @Framework::Routes::EXPORT,
   @Framework::Request::EXPORT,
   @Framework::Response::EXPORT,
   @Framework::Database::EXPORT,
   @Framework::Template::EXPORT,
-  qw(new build run)
+  qw(new build run env)
 );
 
 #
@@ -39,7 +40,7 @@ sub build {
 }
 
 sub run {
-  my $self = shift;
+  my ($self) = @_;
 
   my $app = sub {
     $self->request_handler(@_);

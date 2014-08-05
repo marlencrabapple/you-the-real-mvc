@@ -9,7 +9,6 @@ use base qw(Exporter);
 use Plack::Util;
 use Plack::Request;
 use Plack::Response;
-use Plack::Util::Accessor qw(rethrow);
 
 use Framework::Utils;
 use Framework::Routes;
@@ -57,7 +56,6 @@ sub request_handler {
             $matches = 1;
           }
           elsif($path_arr[$i] eq $$section{var}) { # match via string comparison
-            #$queryvars->add(substr($$section{var},1) => $path_arr[$i]);
             $matches = 1;
           }
           else {
@@ -66,21 +64,21 @@ sub request_handler {
         }
       }
 
-      if($matches) {
+      if(($matches) || (($path eq '/') && ($$route{path_str} eq '/'))) {
         $match = $route;
         last;
       }
     }
 
-    #die Dumper($method,$path,\@path_arr,$routes,$match,$queryvars);
-
     return $match->{handler}->($queryvars,$req) if $match != 0;
-    $self->make_error("Invalid Path.", 404);
+    $self->make_error(S_INVALID_PATH, 404);
   }
   catch {
-    #return $self->res(get_error());
+    if(get_option('debug_mode',Framework::get_section())) {
+      local $SIG{__DIE__} = 'DEFAULT';
+      die $_;
+    }
     return get_error();
-    #die Dumper(get_error());
   }
 }
 

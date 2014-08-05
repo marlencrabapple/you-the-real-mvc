@@ -33,17 +33,17 @@ our @EXPORT = (
 #}
 
 sub make_error {
-  my ($content,$status,$contenttype) = @_;
+  my ($self,$content,$status,$contenttype) = @_;
 
   Framework::Request::set_error(
-    res($content,$contenttype,($status || 500))
+    $self->res($content,$contenttype,($status || 500))
   );
 
-  die;
+  die $_,$content;
 }
 
 sub res {
-  my ($content,$contenttype,$status) = @_;
+  my ($self,$content,$contenttype,$status) = @_;
 
   return [
     $status || 200,
