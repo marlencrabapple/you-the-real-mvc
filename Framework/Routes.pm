@@ -5,7 +5,7 @@ use base qw(Exporter);
 use Plack::Util;
 use Plack::Request;
 use Plack::Response;
-use Data::Dumper;
+use Framework::Utils;
 
 our @EXPORT = qw(get post $routes);
 
@@ -36,11 +36,11 @@ sub add_route {
       map {
         $_ ? sub {
           return {
-            var => $_,
+            var => "$_",
             handler => (index $_, ':') == 0 ? $$pathhandlers{ substr $_, 1 } : undef
           }
         }->() : ()
-      } split '/', $path
+      } split('/', $path)
     ]
   };
 }

@@ -2,14 +2,17 @@ package Framework;
 
 use strict;
 use base qw(Exporter);
+use Try::Tiny;
 use Plack;
 use Plack::Util;
+#use Plack::Util::Accessor qw(rethrow);
+use Framework::Utils;
 use Framework::Routes;
-use Framework::Request;
 use Framework::Strings;
 use Framework::Template;
-use Framework::Response;
 use Framework::Database;
+use Framework::Request;
+use Framework::Response;
 
 our @EXPORT = (
   @Framework::Utils::EXPORT,
@@ -37,7 +40,11 @@ sub build {
 
 sub run {
   my $self = shift;
-  my $app = sub { $self->request_handler(@_) };
+
+  my $app = sub {
+    $self->request_handler(@_);
+  };
+
   return $app;
 }
 

@@ -34,4 +34,16 @@ $$templates{test_template} = compile_template($$sections{main_header}.q{
 </div>
 }.$$sections{main_footer});
 
+$$templates{admin_index_template} = compile_template($$sections{main_header}.q{
+<h1><var $title></h1>
+  <loop $threads>
+    <loop $posts>
+      <div style="background:#ddd;margin-bottom:10px">
+        <var $num>.
+        <blockquote><!var $comment></blockquote>
+      </div>
+    </loop>
+  </loop>
+}.$$sections{main_footer});
+
 1;

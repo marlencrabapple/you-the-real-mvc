@@ -1,65 +1,95 @@
 package Framework::Request;
 
 use strict;
-use base qw(Exporter);
+
+use Try::Tiny;
 use Data::Dumper;
+use base qw(Exporter);
+
 use Plack::Util;
 use Plack::Request;
 use Plack::Response;
+use Plack::Util::Accessor qw(rethrow);
+
+use Framework::Utils;
 use Framework::Routes;
 use Framework::Strings;
 
+our $error;
 our @EXPORT = (
-  qw/request_handler/,
+  qw/$req request_handler/,
   #@Framework::Routes::EXPORT
 );
 
 sub request_handler {
   my ($self,$env) = @_;
-  my ($match,$req,$method,$path,@path_arr,$queryvars,$handler,$res);
+  my ($match,$method,$path,@path_arr,$queryvars,$req);
 
-  $req = Plack::Request->new($env);
-  $path = $req->path_info;
-  $method = $req->method;
-  @path_arr = map { $_ ? $_ : () } split '/', $path;
+  try {
+    $req = Plack::Request->new($env);
+    $path = $req->path_info;
+    $method = $req->method;
+    @path_arr = map { ($_ ne '') || ($_ eq "0") ? "$_" : () } split '/', $path;
 
-  # get traditional query vars. vars from path are appended later.
-  $queryvars = $method eq 'GET' ? $req->query_parameters : $req->body_parameters;
+    # get traditional query vars. vars from path are appended later.
+    $queryvars = $method eq 'GET' ? $req->query_parameters : $req->body_parameters;
 
-  # loop through defined routes
-  foreach my $route (@{$$routes{$method}}) {
-    my $matches = 0;
+    # loop through defined routes
+    foreach my $route (@{$$routes{$method}}) {
+      my $matches = 0;
 
-    for(my $i = 0; $i < scalar(@path_arr); $i++) {
-      last unless scalar(@path_arr) == scalar(@{$$route{path_arr}});
-      my $section = $$route{path_arr}->[$i];
+      for(my $i = 0; $i < scalar(@path_arr); $i++) {
+        last unless scalar(@path_arr) == scalar(@{$$route{path_arr}});
+        my $section = $$route{path_arr}->[$i];
 
-      if(defined $$section{handler}) { # match via handler
-        if($$section{handler}->($path_arr[$i])) {
-          $queryvars->add(substr($$section{var},1) => $path_arr[$i]);
-          $matches++;
+        if(defined $$section{handler}) { # match via handler
+          if($$section{handler}->($path_arr[$i])) {
+            $queryvars->add(substr($$section{var},1) => $path_arr[$i]);
+            $matches = 1;
+          }
+          else {
+            $matches = 0;
+          }
+        }
+        else {
+          if((index $$section{var}, ':') != -1) { # anything goes
+            $queryvars->add(substr($$section{var},1) => $path_arr[$i]);
+            $matches = 1;
+          }
+          elsif($path_arr[$i] eq $$section{var}) { # match via string comparison
+            #$queryvars->add(substr($$section{var},1) => $path_arr[$i]);
+            $matches = 1;
+          }
+          else {
+            $matches = 0;
+          }
         }
       }
-      else {
-        if((index $$section{var}, ':') != -1) { # anything goes
-          $queryvars->add(substr($$section{var},1) => $path_arr[$i]);
-          $matches++;
-        }
-        elsif($path_arr[$i] eq $$section{var}) { # match via string comparison
-          $queryvars->add(substr($$section{var},1) => $path_arr[$i]);
-          $matches++;
-        }
+
+      if($matches) {
+        $match = $route;
+        last;
       }
     }
 
-    if($matches == (scalar @path_arr)) {
-      $match = $route ;
-      last;
-    }
+    #die Dumper($method,$path,\@path_arr,$routes,$match,$queryvars);
+
+    return $match->{handler}->($queryvars,$req) if $match != 0;
+    $self->make_error("Invalid Path.", 404);
   }
+  catch {
+    #return $self->res(get_error());
+    return get_error();
+    #die Dumper(get_error());
+  }
+}
 
-  return $match->{handler}->($queryvars,$req) if $match != 0;
-  return Framework::Response::make_error(404,S_INVALID_PATH);
+sub set_error {
+  $error = shift;
+}
+
+sub get_error {
+  return $error;
 }
 
 1;

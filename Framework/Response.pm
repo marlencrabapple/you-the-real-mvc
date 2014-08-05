@@ -5,7 +5,10 @@ use base qw(Exporter);
 use Plack::Util;
 use Plack::Request;
 use Plack::Response;
+
+use Framework::Utils;
 use Framework::Routes;
+use Framework::Request;
 use Framework::Strings;
 
 our @EXPORT = (
@@ -13,23 +16,39 @@ our @EXPORT = (
   #@Framework::Routes::EXPORT
 );
 
-sub make_error {
-  my ($status,$content,$contenttype) = @_;
+# sub make_error {
+#   my ($content,$contenttype,$status) = @_;
+#
+#   return [
+#     $status || 200,
+#     ['Content-type', ($contenttype || 'text/html; charset=' . get_option('charset'))],
+#     [$content]
+#   ];
+# };
 
-  return [
-    $status || 500,
-    ['Content-type', $contenttype || 'text/html'],
-    [$content]
-  ]
+#sub make_error {
+#  my ($content,$contenttype,$status) = @_;
+#
+#  return res($content,$contenttype,($status || 500))
+#}
+
+sub make_error {
+  my ($content,$status,$contenttype) = @_;
+
+  Framework::Request::set_error(
+    res($content,$contenttype,($status || 500))
+  );
+
+  die;
 }
 
 sub res {
-  my ($self,$content,$contenttype,$status) = @_;
+  my ($content,$contenttype,$status) = @_;
 
   return [
     $status || 200,
-    ['Content-type', $contenttype || 'text/html'],
-    [$content]
+    ['Content-type', ($contenttype || 'text/html; charset=' . get_option('charset',get_section()))],
+    [encode_string($content,get_section())]
   ]
 }
 

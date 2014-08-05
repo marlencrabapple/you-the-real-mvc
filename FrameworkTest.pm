@@ -1,104 +1,107 @@
 package FrameworkTest;
 
 use strict;
-use Framework;
+use parent 'Framework';
 
-use Data::Dumper;
-use base qw(Exporter);
+our ($templates,$board);
 
-our ($self,$board,$templates);
-
-our @EXPORT = (
-  @Framework::EXPORT
-);
-
+use FrameworkTest::Config;
 use FrameworkTest::Templates;
 
+#
+# Database init
+#
+
+our $dbh = Framework::Database->new();
+
+#
+# Routes
+#
+
 sub build {
-  $self = shift;
+  my $self = shift;
+  $board = "";
 
-  $self->get('/', sub {
-    $self->res('Hello, World!');
-  });
-
-  $self->get('/:id', sub {
+  $self->get('/admin/:board/:page', sub {
     my ($params) = @_;
 
-    $self->res("Hello, $params->{id}!");
+    make_admin_page($params->{page});
   }, {
-    id => sub {
-      return shift =~ /^[0-9]+$/
+    board => sub {
+      my $_board = shift;
+
+      foreach (keys $options) {
+        if($_ eq $_board) {
+          $board = $_;
+          Framework::set_section($_board);
+          return 1;
+        }
+      }
+
+      make_error('Invalid board',404);
+    },
+    page => sub {
+      return shift =~ /^[0-9]*$/ # no page is fine
     }
   });
-
-  $self->get('/:name', sub {
-    my ($params) = @_;
-
-    $self->res("Hello, $params->{name}!");
-  });
-
-  $self->get('/test', sub {
-    my ($params) = @_;
-
-    make_test_template($params->{num});
-  });
-
-  $self->get('/pass', sub {
-    my ($params) = @_;
-
-    make_pass_template($params->{num});
-  });
 }
 
-sub make_test_template {
-  my ($num) = @_;
-
-  $self->res($$templates{test_template}->(
-    escape_test => "&&&&& &&&&"
-  ));
-}
-
-sub make_pass_template {
-  $self->res($$templates{pass_template}->());
-}
+#
+# View Controllers
+#
 
 sub make_admin_page {
   my ($page) = @_;
-  my ($session,$sth,$row,$reports,$postcount,$pages,@threads);
+  my ($session,$sth,$row,$reports,$postcount,$pages,$pageoffset,@threads);
 
   $session = verify_admin();
   $reports = get_reported_posts();
 
-  $sth = $dbh->prepare("SELECT count(*) FROM " . get_option('post_table', $board));
-  $sth->execute();
-  $postcount = ($sth->fetchrow_arrayref)->[0];
-  $pages = $postcount / get_option('max_threads_index', $board);
+  $sth = $dbh->prepare("SELECT COUNT(*) FROM " . get_option('sql_post_table',$board))
+    or make_error($dbh->errstr);
+
+  $sth->execute() or make_error($dbh->errstr);
+
+  $postcount = ($sth->fetchrow_array)[0];
+  $pages = $postcount / get_option('max_threads_index',$board);
+  $pageoffset = $page * get_option('max_threads_index',$board);
 
   $sth = $dbh->prepare(
-    "SELECT * FROM " . get_option('post_table', $board)
-    . " WHERE parent IS NULL LIMIT "
-    . get_option('max_threads_index', $board));
+    "SELECT * FROM " . get_option('sql_post_table',$board)
+    . " WHERE parent IS NULL OR parent=0 ORDER BY sticky DESC,lasthit DESC LIMIT "
+    . "$pageoffset,"
+    . get_option('max_threads_index',$board)) or make_error($dbh->errstr);
 
-  $sth->execute();
+  $sth->execute() or make_error($dbh->errstr);
 
   while($row = get_decoded_hashref($sth)) {
     $$row{reported} = defined $$reports{$$row{num}};
-    push @threads, { posts => [$row] };
+    push @threads, {posts => [$row]};
 
-    my $sth2 = $dbh->prepare(
-      "SELECT * FROM " . get_option('post_table', $board)
+    my $sth2 = $dbh->prepare("SELECT COUNT(*) FROM "
+      . get_option('sql_post_table',$board)
+      . " WHERE parent=?") or make_error($dbh->errstr);
+
+    $sth2->execute($$row{num}) or make_error($dbh->errstr);
+
+    my $replyoffset = ($sth2->fetchrow_array)[0] - get_option('max_replies_index',$board);
+    $replyoffset = 0 if $replyoffset < 0;
+
+    $sth2 = $dbh->prepare(
+      "SELECT * FROM " . get_option('sql_post_table',$board)
       . " WHERE parent=? ORDER BY num ASC LIMIT "
-      . get_option('max_replies_index', $board));
+      . "$replyoffset,"
+      . get_option('max_replies_index',$board)) or make_error($dbh->errstr);
 
-    $sth2->execute($$row{num});
+    $sth2->execute($$row{num}) or make_error($dbh->errstr);
 
-    while(my $row2 = get_decoded_hashref($sth)) {
+    while(my $row2 = get_decoded_hashref($sth2)) {
       $$row2{reported} = defined $$reports{$$row2{num}};
       push @threads[(scalar @threads) - 1]->{posts}, $row2;
     }
   }
 
-  $self->res($$templates{admin_index_template}->(
+  res($$templates{admin_index_template}->(
     title => "Page No. $page",
     threads => \@threads,
     page => $page,
@@ -106,34 +109,22 @@ sub make_admin_page {
   ));
 }
 
-sub make_admin_thread {
-  my ($num) = @_;
-  my ($session,$sth,$row,$reports,$thread);
+#
+# Misc Controllers
+#
 
-  $session = verify_admin();
-  $reports = get_reported_posts();
+sub verify_admin {
 
-  my $sth = $dbh->prepare("SELECT * FROM $board WHERE parent=? OR num=? ORDER BY num ASC");
-  $sth->execute($num,$num);
-
-  while($row = get_decoded_hashref($sth)) {
-    $$row{reported} = defined $$reports{$$row{num}};
-    push @{$$thread{posts}}, $row;
-  }
-
-  $self->res($$templates{admin_thread_template}->(
-    title => "No. $$thread{posts}->[0]->{num}",
-    thread => $thread
-  ));
 }
 
 sub get_reported_posts {
   my ($reports,$sth,$row);
 
-  $sth = $dbh->prepare("SELECT * FROM " . get_option('report_table'));
-  $sth->execute();
+  $sth = $dbh->prepare("SELECT * FROM " . get_option('sql_report_table')) or die($dbh->errstr);
+  $sth->execute() or die($dbh->errstr);
 
   while($row = get_decoded_hashref($sth)) {
+    die Dumper($row);
     $$reports{$$row{postno}} = $row;
   }
 
