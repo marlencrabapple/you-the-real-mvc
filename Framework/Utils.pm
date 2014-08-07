@@ -58,7 +58,6 @@ sub forbidden_unicode {
 	return 0;
 }
 
-
 sub encode_string {
   my ($str,$section)=@_;
 

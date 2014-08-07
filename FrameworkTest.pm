@@ -1,16 +1,19 @@
 package FrameworkTest;
 
 use strict;
-use parent 'Framework';
-
-our ($self,$env,$templates,$board,$dbh);
+use base qw(Exporter);
+use Framework;
 
 use FrameworkTest::Config;
+use FrameworkTest::Strings;
 use FrameworkTest::Templates;
 
-#
-# Routes
-#
+our ($self,$env,$templates,$board,$dbh);
+our @EXPORT = (
+  @Framework::EXPORT,
+  @FrameworkTest::Strings::EXPORT,
+  @FrameworkTest::Config::EXPORT
+);
 
 sub build {
   ($self,$env) = @_;
@@ -20,9 +23,13 @@ sub build {
   #
 
   $self->before_process_request(sub {
-    $dbh = Framework::Database->new();
+    $dbh = Framework::Database->new() or make_error(S_SQLCONF);
     $board = "";
   });
+
+  #
+  # Routes
+  #
 
   $self->get('/', sub {
     my ($params) = @_;
@@ -37,7 +44,7 @@ sub build {
   });
 
   $self->get('/admin/:board', sub {
-    make_admin_page(0);
+    make_test_page(0);
   }, {
     board => sub { board_handler(shift) }
   });
@@ -45,7 +52,7 @@ sub build {
   $self->get('/admin/:board/:page', sub {
     my ($params) = @_;
 
-    make_admin_page($params->{page});
+    make_test_page($params->{page});
   }, {
     board => sub { board_handler(shift) },
     page => sub {
@@ -58,11 +65,13 @@ sub build {
 # View Controllers
 #
 
-sub make_admin_page {
+sub make_test_page {
   my ($page) = @_;
   my ($session,$sth,$row,$reports,$postcount,$pages,$pageoffset,@threads);
 
-  $session = verify_admin();
+  #$session = verify_admin();
+  #$self->make_error(S_NOT_AUTHORIZED) unless $session;
+
   $reports = get_reported_posts();
 
   $sth = $dbh->prepare("SELECT COUNT(*) FROM " . get_option('sql_post_table',$board))
@@ -128,7 +137,7 @@ sub make_admin_page {
     @threads[(scalar @threads) - 1]->{omittedimages} = $imagecount - $visibleimages;
   }
 
-  $self->res($$templates{admin_index_template}->(
+  $self->res($$templates{board_index_template}->(
     title => "Page No. $page",
     threads => \@threads,
     page => $page,

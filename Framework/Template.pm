@@ -5,14 +5,12 @@ use Framework::Utils;
 
 our ($sections,$templates);
 our @EXPORT = (
-  qw($sections $templates compile_template include strip_whitespace)
+  qw($sections $templates compile_template include minify_html)
 );
 
 sub compile_template {
   my ($str,$nostrip) = @_;
   my $code;
-
-  $str = strip_whitespace($str) unless $nostrip;
 
   while($str =~ m!(.*?)(<(/?)(var|\!var|const|if|loop)(?:|\s+(.*?[^\\]))>|$)!sg) {
 		my ($html,$tag,$closing,$name,$args) = ($1,$2,$3,$4,$5);
@@ -46,9 +44,11 @@ sub compile_template {
 		'my $absolute_path="http://$ENV{SERVER_NAME}$port$path";'.
 		'my %__v=@_;my %__ov;for(keys %__v){$__ov{$_}=$$_;$$_=$__v{$_};}'.
 		'my $res;'.
+    'my $board=get_section();'.
+    #'use Framework::Strings;'.
 		$code.
 		'$$_=$__ov{$_} for(keys %__ov);'.
-		'return $res; }';
+		'return $nostrip ? $res : minify_html($res); }';
 
 	die "Template format error" unless $sub;
 
@@ -68,12 +68,12 @@ sub include {
 	return $file;
 }
 
-sub strip_whitespace {
+sub minify_html {
   my ($str) = @_;
 
   $str =~ s/^\s+//;
-	$str =~ s/\s+$//;
-	$str =~ s/\n\s*/ /sg;
+  $str =~ s/\s+$//;
+  $str =~ s/\n\s*/ /sg;
 
   return $str;
 }

@@ -8,14 +8,13 @@ use Plack::Request;
 use Plack::Response;
 
 use Framework::Utils;
-use Framework::Strings;
 
 our $dbh;
 our @EXPORT = qw($dbh get_decoded_hashref);
 
 sub new {
   #die Dumper(get_option('sql_dbi_source'));
-  $dbh = DBI->connect_cached(get_option('sql_dbi_source'),get_option('sql_username'),get_option('sql_password'),{AutoCommit => 1}) or make_error(S_SQLCONF);
+  $dbh = DBI->connect_cached(get_option('sql_dbi_source'),get_option('sql_username'),get_option('sql_password'),{AutoCommit => 1}) or return 0;
 }
 
 sub get_decoded_hashref {

@@ -25,7 +25,7 @@ our @EXPORT = (
   @Framework::Response::EXPORT,
   @Framework::Database::EXPORT,
   @Framework::Template::EXPORT,
-  qw($_self new build run env)
+  qw($_self new build run env before_process_request)
 );
 
 #
