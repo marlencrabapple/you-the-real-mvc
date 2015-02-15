@@ -16,14 +16,14 @@ our @EXPORT = (
 );
 
 sub build {
-  ($self,$env) = @_;
+  ($self, $env) = @_;
 
   #
   # Init
   #
 
   $self->before_process_request(sub {
-    $dbh = Framework::Database->new() or make_error(S_SQLCONF);
+    $dbh = Framework::Database->new() or $self->make_error(S_SQLCONF);
     $board = "";
   });
 
@@ -67,27 +67,27 @@ sub build {
 
 sub make_test_page {
   my ($page) = @_;
-  my ($session,$sth,$row,$reports,$postcount,$pages,$pageoffset,@threads);
+  my ($session, $sth, $row, $reports, $postcount, $pages, $pageoffset, @threads);
 
   #$session = verify_admin();
   #$self->make_error(S_NOT_AUTHORIZED) unless $session;
 
   $reports = get_reported_posts();
 
-  $sth = $dbh->prepare("SELECT COUNT(*) FROM " . get_option('sql_post_table',$board))
+  $sth = $dbh->prepare("SELECT COUNT(*) FROM " . get_option('sql_post_table', $board))
     or $self->make_error($dbh->errstr);
 
   $sth->execute() or $self->make_error($dbh->errstr);
 
   $postcount = ($sth->fetchrow_array)[0];
-  $pages = $postcount / get_option('max_threads_index',$board);
-  $pageoffset = $page * get_option('max_threads_index',$board);
+  $pages = $postcount / get_option('max_threads_index', $board);
+  $pageoffset = $page * get_option('max_threads_index', $board);
 
   $sth = $dbh->prepare(
-    "SELECT * FROM " . get_option('sql_post_table',$board)
+    "SELECT * FROM " . get_option('sql_post_table', $board)
     . " WHERE parent IS NULL OR parent=0 ORDER BY sticky DESC,lasthit DESC LIMIT "
     . "$pageoffset,"
-    . get_option('max_threads_index',$board)) or $self->make_error($dbh->errstr);
+    . get_option('max_threads_index', $board)) or $self->make_error($dbh->errstr);
 
   $sth->execute() or $self->make_error($dbh->errstr);
 
@@ -96,12 +96,12 @@ sub make_test_page {
     push @threads, {posts => [$row]};
 
     my $sth2 = $dbh->prepare("SELECT COUNT(*) FROM "
-      . get_option('sql_post_table',$board)
+      . get_option('sql_post_table', $board)
       . " WHERE parent=?") or $self->make_error($dbh->errstr);
 
     $sth2->execute($$row{num}) or $self->make_error($dbh->errstr);
 
-    my $replyoffset = ($sth2->fetchrow_array)[0] - get_option('max_replies_index',$board);
+    my $replyoffset = ($sth2->fetchrow_array)[0] - get_option('max_replies_index', $board);
 
     if($replyoffset < 0) {
       $replyoffset = 0;
@@ -111,7 +111,7 @@ sub make_test_page {
     }
 
     my $sth2 = $dbh->prepare("SELECT COUNT(*) FROM "
-      . get_option('sql_post_table',$board)
+      . get_option('sql_post_table', $board)
       . " WHERE parent=? AND image IS NOT NULL") or $self->make_error($dbh->errstr);
 
     $sth2->execute($$row{num}) or $self->make_error($dbh->errstr);
@@ -122,7 +122,7 @@ sub make_test_page {
       "SELECT * FROM " . get_option('sql_post_table',$board)
       . " WHERE parent=? ORDER BY num ASC LIMIT "
       . "$replyoffset,"
-      . get_option('max_replies_index',$board)) or $self->make_error($dbh->errstr);
+      . get_option('max_replies_index', $board)) or $self->make_error($dbh->errstr);
 
     $sth2->execute($$row{num}) or $self->make_error($dbh->errstr);
 
@@ -164,7 +164,7 @@ sub board_handler {
     }
   }
 
-  $self->make_error('Invalid board',404);
+  $self->make_error('Invalid board', 404);
 }
 
 sub get_reported_posts {

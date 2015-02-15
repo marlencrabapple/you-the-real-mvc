@@ -2,19 +2,16 @@ package Framework::Utils;
 
 use strict;
 
-use Plack::Util::Accessor qw(rethrow);
-
-use base qw(Exporter);
-use Encode qw(decode encode);
-use Data::Dumper;
+use base qw(Exporter); # don't know why it can't see it in Framework::Base...
+use Framework::Base;
 
 use constant MAX_UNICODE => 1114111;
 
 our $_section;
 our ($options) = { global => {} };
 our @EXPORT = (
-  @Data::Dumper::EXPORT,
-  qw/$options get_option add_option get_ip forbidden_unicode encode_string decode_string clean_string set_section get_section rethrow/
+  @Framework::Base::EXPORT,
+  qw/$options get_option add_option get_ip forbidden_unicode encode_string decode_string clean_string set_section get_section/
 );
 
 sub get_option {

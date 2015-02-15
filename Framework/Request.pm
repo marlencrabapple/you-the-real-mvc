@@ -41,7 +41,7 @@ sub request_handler {
         last unless scalar(@path_arr) == scalar(@{$$route{path_arr}});
         my $section = $$route{path_arr}->[$i];
 
-        if(defined $$section{handler}) { # match via handler
+        if(defined $$section{handler}) { # match via handler (this ignores prefixes or earlier parts of the path. gotta fix that)
           if($$section{handler}->($path_arr[$i])) {
             $queryvars->add(substr($$section{var},1) => $path_arr[$i]);
             $matches = 1;
@@ -74,10 +74,11 @@ sub request_handler {
     $self->make_error(S_INVALID_PATH, 404);
   }
   catch {
-    if(get_option('debug_mode',Framework::get_section())) {
+    if(get_option('debug_mode', Framework::get_section())) {
       local $SIG{__DIE__} = 'DEFAULT'; # thanks http://blog.64p.org/entry/20101109/1289291797
       die $_;
     }
+    
     return get_error();
   }
 }

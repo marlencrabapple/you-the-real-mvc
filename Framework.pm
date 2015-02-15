@@ -14,9 +14,9 @@ use Framework::Database;
 use Framework::Request;
 use Framework::Response;
 
-my $before_process_request;
-
+my @before_process_request = ();
 our $_self;
+
 our @EXPORT = (
   @Framework::Strings::EXPORT,
   @Framework::Utils::EXPORT,
@@ -47,7 +47,10 @@ sub run {
   $_self = $self;
 
   my $app = sub {
-    $before_process_request->();
+    foreach my $sub (@before_process_request) {
+      $sub->();
+    }
+
     $self->request_handler(@_);
   };
 
@@ -56,7 +59,7 @@ sub run {
 
 sub before_process_request {
   my $self = shift;
-  $before_process_request = shift;
+  push @before_process_request, shift;
 }
 
 1;
