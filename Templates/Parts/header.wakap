@@ -1,5 +1,5 @@
 <!doctype html>
 <head>
-<title><var $title></title>
+  <title><var $title></title>
 </head>
 <body>

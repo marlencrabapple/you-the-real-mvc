@@ -172,7 +172,7 @@ sub request_handler {
       die $_;
     }
 
-    return get_error();
+    return get_error()
   }
 }
 
@@ -226,12 +226,13 @@ sub init_templates {
         $str .= $row;
       }
       close $fh;
+      chomp($str);
 
       if($ext eq 'wakap') {
-        add_template($fn, compile_template($str, undef, 1))
+        add_template($fn, compile_template($str, get_option('minify'), 1))
       }
       else {
-        add_template($fn, compile_template($str))
+        add_template($fn, compile_template($str, get_option('minify')))
       }
     }
   }, get_option('template_dir'));
@@ -248,10 +249,8 @@ sub add_template {
 }
 
 sub compile_template {
-  my ($str, $nostrip, $part) = @_;
+  my ($str, $minify, $part) = @_;
   my ($code, $sub);
-
-  print Dumper($str, $part), "\n";
 
   while($str =~ m!(.*?)(<(/?)(var|\!var|part|const|if|loop)(?:|\s+(.*?[^\\]))>|$)!sg) {
     my ($html, $tag, $closing, $name, $args) = ($1, $2, $3, $4, $5);
@@ -289,13 +288,14 @@ sub compile_template {
       #. 'my $section=get_section();'
       . $code
       . '$$_=$__ov{$_} for(keys %__ov);'
-      . 'return $nostrip ? $res : minify_html($res); }';
+      . 'return !$minify ? $res : minify_html($res); }';
 
     die "Template format error" unless $sub;
   }
   else {
     $sub = eval 'no strict; sub { my $res; ' . $code
-    . 'return $nostrip ? $res : minify_html($res); }';
+    #. 'return !$minify ? $res : minify_html($res); }';
+    . 'return $res }';
     die "Template format error" unless $sub;
   }
 

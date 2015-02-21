@@ -12,7 +12,7 @@ add_option('charset', 'UTF-8');
 add_option('debug_mode', 1);
 add_option('max_unicode', 1114111);
 add_option('template_dir', './Templates');
-#add_option('template_parts_dir', './Templates/Parts');
+add_option('minify', 0);
 
 #
 # Strings
