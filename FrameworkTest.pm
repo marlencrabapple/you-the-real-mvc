@@ -1,183 +1,52 @@
 package FrameworkTest;
 
 use strict;
-use base qw(Exporter);
+
 use Framework;
-
 use FrameworkTest::Config;
-use FrameworkTest::Strings;
-use FrameworkTest::Templates;
-
-our ($self,$env,$templates,$board,$dbh);
-our @EXPORT = (
-  @Framework::EXPORT,
-  @FrameworkTest::Strings::EXPORT,
-  @FrameworkTest::Config::EXPORT
-);
 
 sub build {
-  ($self, $env) = @_;
-
-  #
-  # Init
-  #
-
-  $self->before_process_request(sub {
-    $dbh = Framework::Database->new() or $self->make_error(S_SQLCONF);
-    $board = "";
+  get('/', sub {
+    res("Hello world!");
   });
 
-  #
-  # Routes
-  #
+  get('/json', sub {
+    make_error(['wait', 'what'], 403);
+    res({ hello => 'world'});
+  });
 
-  $self->get('/', sub {
+  get('/admin/:board', sub {
     my ($params) = @_;
 
-    $self->res("Hello, World!")
-  });
-
-  $self->get('/:name', sub {
-    my ($params) = @_;
-
-    $self->res("Hello, $params->{name}")
-  });
-
-  $self->get('/admin/:board', sub {
-    make_test_page(0);
+    res("Just a test");
   }, {
-    board => sub { board_handler(shift) }
+    board => sub { 1 }
   });
 
-  $self->get('/admin/:board/:page', sub {
+  get('/admin/:board/:page', sub {
     my ($params) = @_;
 
-    make_test_page($params->{page});
+    res("Just a test\n\nPage: $$params{page} of $$params{board}");
   }, {
-    board => sub { board_handler(shift) },
+    board => sub { 1 },
     page => sub {
-      return shift =~ /^[0-9]+$/
+      # This doesn't work because aetting the page to '0' causes request_handler()
+      # to think we didn't return anything after the initial 1 because of Perl's
+      # lack of typing.
+      #
+      # Update: Got it working, but its bad practice anyways so we'll throw a 404
+      # like any other site.
+
+      # # Set page to zero if invalid and avoid a 404
+      # my $page = shift;
+      # $page = ($page =~ /[0-9]+/) ? $page : '0';
+      #
+      # return (1, $page);
+
+      return 1 if shift =~ /[0-9]+/;
+      return 0;
     }
   });
 }
 
-#
-# View Controllers
-#
-
-sub make_test_page {
-  my ($page) = @_;
-  my ($session, $sth, $row, $reports, $postcount, $pages, $pageoffset, @threads);
-
-  #$session = verify_admin();
-  #$self->make_error(S_NOT_AUTHORIZED) unless $session;
-
-  $reports = get_reported_posts();
-
-  $sth = $dbh->prepare("SELECT COUNT(*) FROM " . get_option('sql_post_table', $board))
-    or $self->make_error($dbh->errstr);
-
-  $sth->execute() or $self->make_error($dbh->errstr);
-
-  $postcount = ($sth->fetchrow_array)[0];
-  $pages = $postcount / get_option('max_threads_index', $board);
-  $pageoffset = $page * get_option('max_threads_index', $board);
-
-  $sth = $dbh->prepare(
-    "SELECT * FROM " . get_option('sql_post_table', $board)
-    . " WHERE parent IS NULL OR parent=0 ORDER BY sticky DESC,lasthit DESC LIMIT "
-    . "$pageoffset,"
-    . get_option('max_threads_index', $board)) or $self->make_error($dbh->errstr);
-
-  $sth->execute() or $self->make_error($dbh->errstr);
-
-  while($row = get_decoded_hashref($sth)) {
-    $$row{reported} = defined $$reports{$$row{num}};
-    push @threads, {posts => [$row]};
-
-    my $sth2 = $dbh->prepare("SELECT COUNT(*) FROM "
-      . get_option('sql_post_table', $board)
-      . " WHERE parent=?") or $self->make_error($dbh->errstr);
-
-    $sth2->execute($$row{num}) or $self->make_error($dbh->errstr);
-
-    my $replyoffset = ($sth2->fetchrow_array)[0] - get_option('max_replies_index', $board);
-
-    if($replyoffset < 0) {
-      $replyoffset = 0;
-    }
-    else {
-      @threads[(scalar @threads) - 1]->{omitted} = $replyoffset;
-    }
-
-    my $sth2 = $dbh->prepare("SELECT COUNT(*) FROM "
-      . get_option('sql_post_table', $board)
-      . " WHERE parent=? AND image IS NOT NULL") or $self->make_error($dbh->errstr);
-
-    $sth2->execute($$row{num}) or $self->make_error($dbh->errstr);
-
-    my $imagecount = ($sth2->fetchrow_array)[0];
-
-    $sth2 = $dbh->prepare(
-      "SELECT * FROM " . get_option('sql_post_table',$board)
-      . " WHERE parent=? ORDER BY num ASC LIMIT "
-      . "$replyoffset,"
-      . get_option('max_replies_index', $board)) or $self->make_error($dbh->errstr);
-
-    $sth2->execute($$row{num}) or $self->make_error($dbh->errstr);
-
-    my $visibleimages = 0;
-
-    while(my $row2 = get_decoded_hashref($sth2)) {
-      $$row2{reported} = defined $$reports{$$row2{num}};
-      $visibleimages++ if $$row2{image};
-      push @threads[(scalar @threads) - 1]->{posts}, $row2;
-    }
-
-    @threads[(scalar @threads) - 1]->{omittedimages} = $imagecount - $visibleimages;
-  }
-
-  $self->res($$templates{board_index_template}->(
-    title => "Page No. $page",
-    threads => \@threads,
-    page => $page,
-    pages => $pages
-  ));
-}
-
-#
-# Misc Controllers
-#
-
-sub verify_admin {
-
-}
-
-sub board_handler {
-  my $_board = shift;
-
-  foreach (keys $options) {
-    if($_ eq $_board) {
-      $board = $_;
-      Framework::set_section($_board);
-      return 1;
-    }
-  }
-
-  $self->make_error('Invalid board', 404);
-}
-
-sub get_reported_posts {
-  my ($reports,$sth,$row);
-
-  $sth = $dbh->prepare("SELECT * FROM " . get_option('sql_report_table')) or $self->make_error($dbh->errstr);
-  $sth->execute() or $self->make_error($dbh->errstr);
-
-  while($row = get_decoded_hashref($sth)) {
-    die Dumper($row);
-    $$reports{$$row{postno}} = $row;
-  }
-
-  return $reports;
-}
 1;

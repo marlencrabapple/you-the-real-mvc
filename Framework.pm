@@ -1,36 +1,15 @@
 package Framework;
 
 use strict;
-use base qw(Exporter);
-use Try::Tiny;
-use Plack;
-use Plack::Util;
-#use Plack::Util::Accessor qw(rethrow);
-use Framework::Utils;
-use Framework::Routes;
-use Framework::Strings;
-use Framework::Template;
-use Framework::Database;
-use Framework::Request;
-use Framework::Response;
 
-my @before_process_request = ();
-our $_self;
+use base qw(Exporter); # exporting exporter doesn't work as expected...
+use Framework::Base;
+use Framework::Defaults;
 
 our @EXPORT = (
-  @Framework::Strings::EXPORT,
-  @Framework::Utils::EXPORT,
-  @Framework::Routes::EXPORT,
-  @Framework::Request::EXPORT,
-  @Framework::Response::EXPORT,
-  @Framework::Database::EXPORT,
-  @Framework::Template::EXPORT,
-  qw($_self new build run env before_process_request)
+  @Framework::Base::EXPORT,
+  qw(new build run)
 );
-
-#
-# Init Framework
-#
 
 sub new {
   my $self = shift;
@@ -44,10 +23,9 @@ sub build {
 
 sub run {
   my ($self) = @_;
-  $_self = $self;
 
   my $app = sub {
-    foreach my $sub (@before_process_request) {
+    foreach my $sub (@Framework::Base::before_process_request) {
       $sub->();
     }
 
@@ -55,11 +33,6 @@ sub run {
   };
 
   return $app;
-}
-
-sub before_process_request {
-  my $self = shift;
-  push @before_process_request, shift;
 }
 
 1;
