@@ -130,8 +130,6 @@ sub request_handler {
           my ($okay, $var);
           ($okay, $var) = $$section{handler}->($path_arr[$i]);
 
-          print STDERR "\$var: $var\n";
-
           if($okay) {
             $queryvars->add(substr($$section{var}, 1) =>
               ($var = defined $var ? $var : $path_arr[$i]));
@@ -235,31 +233,31 @@ sub compile_template {
   my $code;
 
   while($str =~ m!(.*?)(<(/?)(var|\!var|const|if|loop)(?:|\s+(.*?[^\\]))>|$)!sg) {
-		my ($html, $tag, $closing, $name, $args) = ($1, $2, $3, $4, $5);
+    my ($html, $tag, $closing, $name, $args) = ($1, $2, $3, $4, $5);
 
-		$html =~ s/(['\\])/\\$1/g;
-		$code .= "\$res.='$html';" if(length $html);
-		$args =~ s/\\>/>/g;
+    $html =~ s/(['\\])/\\$1/g;
+    $code .= "\$res.='$html';" if(length $html);
+    $args =~ s/\\>/>/g;
 
-		if($tag) {
-			if($closing) {
-				if($name eq 'if') { $code .= '}' }
-				elsif($name eq 'loop') { $code .= '$$_=$__ov{$_} for(keys %__ov);}}' }
-			}
-			else {
-				if($name eq '!var') { $code .= '$res.=eval{' . $args . '};' }
+    if($tag) {
+      if($closing) {
+        if($name eq 'if') { $code .= '}' }
+        elsif($name eq 'loop') { $code .= '$$_=$__ov{$_} for(keys %__ov);}}' }
+      }
+      else {
+        if($name eq '!var') { $code .= '$res.=eval{' . $args . '};' }
         elsif($name eq 'var') { $code .= '$res.=clean_string(eval{' . $args . '});' }
-				elsif($name eq 'const') { my $const = eval $args; $const =~ s/(['\\])/\\$1/g; $code .= '$res.=\'' . $const . '\';' }
-				elsif($name eq 'if') { $code .= 'if(eval{'.$args.'}){' }
-				elsif($name eq 'loop')
-				{ $code .= 'my $__a=eval{' . $args . '};if($__a){for(@$__a){my %__v=%{$_};my %__ov;for(keys %__v){$__ov{$_}=$$_;$$_=$__v{$_};}' }
-			}
-		}
-	}
+        elsif($name eq 'const') { my $const = eval $args; $const =~ s/(['\\])/\\$1/g; $code .= '$res.=\'' . $const . '\';' }
+        elsif($name eq 'if') { $code .= 'if(eval{'.$args.'}){' }
+        elsif($name eq 'loop')
+        { $code .= 'my $__a=eval{' . $args . '};if($__a){for(@$__a){my %__v=%{$_};my %__ov;for(keys %__v){$__ov{$_}=$$_;$$_=$__v{$_};}' }
+      }
+    }
+  }
 
-	my $sub = eval 'no strict; sub { '
-		. 'my $port=$ENV{SERVER_PORT}==80?"":":$ENV{SERVER_PORT}";'
-		. 'my $self=$ENV{SCRIPT_NAME};'
+  my $sub = eval 'no strict; sub { '
+    . 'my $port=$ENV{SERVER_PORT}==80?"":":$ENV{SERVER_PORT}";'
+    . 'my $self=$ENV{SCRIPT_NAME};'
     . 'my $absolute_self="http://$ENV{SERVER_NAME}$port$ENV{SCRIPT_NAME}";'
     . 'my ($path)=$ENV{SCRIPT_NAME}=~m!^(.*/)[^/]+$!;'
     . 'my $absolute_path="http://$ENV{SERVER_NAME}$port$path";'
@@ -270,20 +268,20 @@ sub compile_template {
     . '$$_=$__ov{$_} for(keys %__ov);'
     . 'return $nostrip ? $res : minify_html($res); }';
 
-	die "Template format error" unless $sub;
+  die "Template format error" unless $sub;
 
-	return $sub;
+  return $sub;
 }
 
 sub include {
   my ($filename, $nostrip) = @_;
 
-	open FILE, $filename or return '';
-	my $file = do { local $/; <FILE> };
+  open FILE, $filename or return '';
+  my $file = do { local $/; <FILE> };
 
   $file = minify_html($file) unless $nostrip;
 
-	return $file;
+  return $file;
 }
 
 #
@@ -291,87 +289,87 @@ sub include {
 #
 
 sub forbidden_unicode {
-	my ($dec, $hex) = @_;
+  my ($dec, $hex) = @_;
 
-	return 1 if length($dec) > 7 or length($hex) > 7; # too long numbers
+  return 1 if length($dec) > 7 or length($hex) > 7; # too long numbers
 
-	my $ord = ($dec or hex $hex);
-	return 1 if $ord > get_option('max_unicode'); # outside unicode range
-	return 1 if $ord < 32; # control chars
-	return 1 if $ord >= 0x7f and $ord <= 0x84; # control chars
-	return 1 if $ord >= 0xd800 and $ord <= 0xdfff; # surrogate code points
-	return 1 if $ord >= 0x202a and $ord <= 0x202e; # text direction
-	return 1 if $ord >= 0xfdd0 and $ord <= 0xfdef; # non-characters
-	return 1 if $ord % 0x10000 >= 0xfffe; # non-characters
-	return 0;
+  my $ord = ($dec or hex $hex);
+  return 1 if $ord > get_option('max_unicode'); # outside unicode range
+  return 1 if $ord < 32; # control chars
+  return 1 if $ord >= 0x7f and $ord <= 0x84; # control chars
+  return 1 if $ord >= 0xd800 and $ord <= 0xdfff; # surrogate code points
+  return 1 if $ord >= 0x202a and $ord <= 0x202e; # text direction
+  return 1 if $ord >= 0xfdd0 and $ord <= 0xfdef; # non-characters
+  return 1 if $ord % 0x10000 >= 0xfffe; # non-characters
+  return 0;
 }
 
 sub encode_string {
   my ($str, $section) = @_;
-	return encode(get_option('charset', $section), $str, 0x0400);
+  return encode(get_option('charset', $section), $str, 0x0400);
 }
 
 sub decode_string {
   my ($str, $charset, $noentities) = @_;
-	my $use_unicode = $charset ? 1 : 0;
+  my $use_unicode = $charset ? 1 : 0;
 
-	$str = decode($charset, $str) if $use_unicode;
+  $str = decode($charset, $str) if $use_unicode;
 
-	$str =~ s{(&#([0-9]*)([;&])|&#([x&])([0-9a-f]*)([;&]))}{
-		my $ord=($2 or hex $5);
-		if($3 eq '&' or $4 eq '&' or $5 eq '&') { $1 } # nested entities, leave as-is.
-		elsif(forbidden_unicode($2,$5))  { "" } # strip forbidden unicode chars
-		elsif($ord==35 or $ord==38) { $1 } # don't convert & or #
-		elsif($use_unicode) { chr $ord } # if we have unicode support, convert all entities
-		elsif($ord<128) { chr $ord } # otherwise just convert ASCII-range entities
-		else { $1 } # and leave the rest as-is.
-	}gei unless $noentities;
+  $str =~ s{(&#([0-9]*)([;&])|&#([x&])([0-9a-f]*)([;&]))}{
+    my $ord=($2 or hex $5);
+    if($3 eq '&' or $4 eq '&' or $5 eq '&') { $1 } # nested entities, leave as-is.
+    elsif(forbidden_unicode($2,$5))  { "" } # strip forbidden unicode chars
+    elsif($ord==35 or $ord==38) { $1 } # don't convert & or #
+    elsif($use_unicode) { chr $ord } # if we have unicode support, convert all entities
+    elsif($ord<128) { chr $ord } # otherwise just convert ASCII-range entities
+    else { $1 } # and leave the rest as-is.
+  }gei unless $noentities;
 
-	$str =~ s/[\x00-\x08\x0b\x0c\x0e-\x1f]//g; # remove control chars
+  $str =~ s/[\x00-\x08\x0b\x0c\x0e-\x1f]//g; # remove control chars
 
-	return $str;
+  return $str;
 }
 
 sub clean_string {
   my ($str, $cleanentities) = @_;
 
-	if($cleanentities) { $str =~ s/&/&amp;/g } # clean up &
-	else {
-		$str =~ s/&(#([0-9]+);|#x([0-9a-fA-F]+);|)/
-			if($1 eq "") { '&amp;' } # change simple ampersands
-			elsif(forbidden_unicode($2,$3))  { "" } # strip forbidden unicode chars
-			else { "&$1" } # and leave the rest as-is.
-		/ge  # clean up &, excluding numerical entities
-	}
+  if($cleanentities) { $str =~ s/&/&amp;/g } # clean up &
+  else {
+    $str =~ s/&(#([0-9]+);|#x([0-9a-fA-F]+);|)/
+      if($1 eq "") { '&amp;' } # change simple ampersands
+      elsif(forbidden_unicode($2,$3))  { "" } # strip forbidden unicode chars
+      else { "&$1" } # and leave the rest as-is.
+    /ge  # clean up &, excluding numerical entities
+  }
 
-	$str =~ s/\</&lt;/g; # clean up brackets for HTML tags
-	$str =~ s/\>/&gt;/g;
-	$str =~ s/"/&quot;/g; # clean up quotes for HTML attributes
-	$str =~ s/'/&#39;/g;
-	$str =~ s/,/&#44;/g; # clean up commas for some reason I forgot
+  $str =~ s/\</&lt;/g; # clean up brackets for HTML tags
+  $str =~ s/\>/&gt;/g;
+  $str =~ s/"/&quot;/g; # clean up quotes for HTML attributes
+  $str =~ s/'/&#39;/g;
+  $str =~ s/,/&#44;/g; # clean up commas for some reason I forgot
 
-	$str =~ s/[\x00-\x08\x0b\x0c\x0e-\x1f]//g; # remove control chars
+  $str =~ s/[\x00-\x08\x0b\x0c\x0e-\x1f]//g; # remove control chars
 
-	return $str;
+  return $str;
 }
 
 sub escamp {
-	my ($str) = @_;
-	$str =~ s/&/&amp;/g;
-	return $str;
+  my ($str) = @_;
+  $str =~ s/&/&amp;/g;
+  return $str;
 }
 
 sub urlenc {
-	my ($str) = @_;
-	$str =~ s/([^\w ])/"%".sprintf("%02x",ord $1)/sge;
-	$str =~ s/ /+/sg;
-	return $str;
+  my ($str) = @_;
+  $str =~ s/([^\w ])/"%".sprintf("%02x",ord $1)/sge;
+  $str =~ s/ /+/sg;
+  return $str;
 }
 
 sub clean_path {
-	my ($str) = @_;
-	$str =~ s!([^\w/._\-])!"%".sprintf("%02x",ord $1)!sge;
-	return $str;
+  my ($str) = @_;
+  $str =~ s!([^\w/._\-])!"%".sprintf("%02x",ord $1)!sge;
+  return $str;
 }
 
 sub minify_html {
@@ -385,40 +383,40 @@ sub minify_html {
 }
 
 sub clean_to_js {
-	my $str = shift;
+  my $str = shift;
 
-	$str =~ s/&amp;/\\x26/g;
-	$str =~ s/&lt;/\\x3c/g;
-	$str =~ s/&gt;/\\x3e/g;
-	$str =~ s/&quot;/\\x22/g; #"
-	$str =~ s/(&#39;|')/\\x27/g;
-	$str =~ s/&#44;/,/g;
-	$str =~ s/&#[0-9]+;/sprintf "\\u%04x",$1/ge;
-	$str =~ s/&#x[0-9a-f]+;/sprintf "\\u%04x",hex($1)/gie;
-	$str =~ s/(\r\n|\r|\n)/\\n/g;
+  $str =~ s/&amp;/\\x26/g;
+  $str =~ s/&lt;/\\x3c/g;
+  $str =~ s/&gt;/\\x3e/g;
+  $str =~ s/&quot;/\\x22/g; #"
+  $str =~ s/(&#39;|')/\\x27/g;
+  $str =~ s/&#44;/,/g;
+  $str =~ s/&#[0-9]+;/sprintf "\\u%04x",$1/ge;
+  $str =~ s/&#x[0-9a-f]+;/sprintf "\\u%04x",hex($1)/gie;
+  $str =~ s/(\r\n|\r|\n)/\\n/g;
 
-	return "'$str'";
+  return "'$str'";
 }
 
 sub js_string {
-	my $str = shift;
+  my $str = shift;
 
-	$str =~ s/\\/\\\\/g;
-	$str =~ s/'/\\'/g;
-	$str =~ s/([\x00-\x1f\x80-\xff<>&])/sprintf "\\x%02x",ord($1)/ge;
-	eval '$str=~s/([\x{100}-\x{ffff}])/sprintf "\\u%04x",ord($1)/ge';
-	$str =~ s/(\r\n|\r|\n)/\\n/g;
+  $str =~ s/\\/\\\\/g;
+  $str =~ s/'/\\'/g;
+  $str =~ s/([\x00-\x1f\x80-\xff<>&])/sprintf "\\x%02x",ord($1)/ge;
+  eval '$str=~s/([\x{100}-\x{ffff}])/sprintf "\\u%04x",ord($1)/ge';
+  $str =~ s/(\r\n|\r|\n)/\\n/g;
 
-	return "'$str'";
+  return "'$str'";
 }
 
 sub js_array {
-	return "[" . (join ",", @_) . "]";
+  return "[" . (join ",", @_) . "]";
 }
 
 sub js_hash {
-	my %hash = @_;
-	return "{" . (join ",", map { "'$_':$hash{$_}" } keys %hash) . "}";
+  my %hash = @_;
+  return "{" . (join ",", map { "'$_':$hash{$_}" } keys %hash) . "}";
 }
 
 1;
