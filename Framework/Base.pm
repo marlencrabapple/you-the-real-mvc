@@ -215,9 +215,6 @@ sub make_error {
 #
 
 sub init_templates {
-  # scan template dir for templates (parts first), eval them, and add them with
-  # add template
-
   find(sub {
     if(!-d $_) {
       my ($fn, $ext) = split '\.', $_;
@@ -230,14 +227,12 @@ sub init_templates {
       }
       close $fh;
 
-      # if($ext eq 'wakap') {
-      #   add_template($fn, $str)
-      # }
-      # else {
-      #   add_template($fn, compile_template($str))
-      # }
-
-      add_template($fn, compile_template($str))
+      if($ext eq 'wakap') {
+        add_template($fn, compile_template($str, undef, 1))
+      }
+      else {
+        add_template($fn, compile_template($str))
+      }
     }
   }, get_option('template_dir'));
 }
@@ -253,8 +248,10 @@ sub add_template {
 }
 
 sub compile_template {
-  my ($str, $nostrip) = @_;
-  my $code;
+  my ($str, $nostrip, $part) = @_;
+  my ($code, $sub);
+
+  print Dumper($str, $part), "\n";
 
   while($str =~ m!(.*?)(<(/?)(var|\!var|part|const|if|loop)(?:|\s+(.*?[^\\]))>|$)!sg) {
     my ($html, $tag, $closing, $name, $args) = ($1, $2, $3, $4, $5);
@@ -280,20 +277,27 @@ sub compile_template {
     }
   }
 
-  my $sub = eval 'no strict; sub { '
-    . 'my $port=$ENV{SERVER_PORT}==80?"":":$ENV{SERVER_PORT}";'
-    . 'my $self=$ENV{SCRIPT_NAME};'
-    . 'my $absolute_self="http://$ENV{SERVER_NAME}$port$ENV{SCRIPT_NAME}";'
-    . 'my ($path)=$ENV{SCRIPT_NAME}=~m!^(.*/)[^/]+$!;'
-    . 'my $absolute_path="http://$ENV{SERVER_NAME}$port$path";'
-    . 'my %__v=@_;my %__ov;for(keys %__v){$__ov{$_}=$$_;$$_=$__v{$_};}'
-    . 'my $res;'
-    . 'my $section=get_section();'
-    . $code
-    . '$$_=$__ov{$_} for(keys %__ov);'
-    . 'return $nostrip ? $res : minify_html($res); }';
+  if(!$part) {
+    $sub = eval 'no strict; sub { '
+      . 'my $port=$ENV{SERVER_PORT}==80?"":":$ENV{SERVER_PORT}";'
+      . 'my $self=$ENV{SCRIPT_NAME};'
+      . 'my $absolute_self="http://$ENV{SERVER_NAME}$port$ENV{SCRIPT_NAME}";'
+      . 'my ($path)=$ENV{SCRIPT_NAME}=~m!^(.*/)[^/]+$!;'
+      . 'my $absolute_path="http://$ENV{SERVER_NAME}$port$path";'
+      . 'my %__v=@_;my %__ov;for(keys %__v){$__ov{$_}=$$_;$$_=$__v{$_};}'
+      . 'my $res;'
+      #. 'my $section=get_section();'
+      . $code
+      . '$$_=$__ov{$_} for(keys %__ov);'
+      . 'return $nostrip ? $res : minify_html($res); }';
 
-  die "Template format error" unless $sub;
+    die "Template format error" unless $sub;
+  }
+  else {
+    $sub = eval 'no strict; sub { my $res; ' . $code
+    . 'return $nostrip ? $res : minify_html($res); }';
+    die "Template format error" unless $sub;
+  }
 
   return $sub;
 }
