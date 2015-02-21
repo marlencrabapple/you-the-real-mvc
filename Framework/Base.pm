@@ -4,6 +4,7 @@ use strict;
 
 use JSON;
 use Try::Tiny;
+use File::Find;
 use Plack::Util;
 use Data::Dumper;
 use HTML::Entities;
@@ -216,6 +217,29 @@ sub make_error {
 sub init_templates {
   # scan template dir for templates (parts first), eval them, and add them with
   # add template
+
+  find(sub {
+    if(!-d $_) {
+      my ($fn, $ext) = split '\.', $_;
+      my $str;
+
+      # File::Find uses chdir so we only need the file name, not the full path
+      open my $fh, '<:encoding(UTF-8)', $_ or die get_option('template_io_error'), "$!";
+      while(my $row = <$fh>) {
+        $str .= $row;
+      }
+      close $fh;
+
+      # if($ext eq 'wakap') {
+      #   add_template($fn, $str)
+      # }
+      # else {
+      #   add_template($fn, compile_template($str))
+      # }
+
+      add_template($fn, compile_template($str))
+    }
+  }, get_option('template_dir'));
 }
 
 sub template {
@@ -232,7 +256,7 @@ sub compile_template {
   my ($str, $nostrip) = @_;
   my $code;
 
-  while($str =~ m!(.*?)(<(/?)(var|\!var|const|if|loop)(?:|\s+(.*?[^\\]))>|$)!sg) {
+  while($str =~ m!(.*?)(<(/?)(var|\!var|part|const|if|loop)(?:|\s+(.*?[^\\]))>|$)!sg) {
     my ($html, $tag, $closing, $name, $args) = ($1, $2, $3, $4, $5);
 
     $html =~ s/(['\\])/\\$1/g;
@@ -247,6 +271,7 @@ sub compile_template {
       else {
         if($name eq '!var') { $code .= '$res.=eval{' . $args . '};' }
         elsif($name eq 'var') { $code .= '$res.=clean_string(eval{' . $args . '});' }
+        elsif($name eq 'part') { $code .= '$res.=eval{template(' . $args . ')->()};' }
         elsif($name eq 'const') { my $const = eval $args; $const =~ s/(['\\])/\\$1/g; $code .= '$res.=\'' . $const . '\';' }
         elsif($name eq 'if') { $code .= 'if(eval{'.$args.'}){' }
         elsif($name eq 'loop')

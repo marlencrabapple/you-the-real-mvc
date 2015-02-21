@@ -7,7 +7,10 @@ use FrameworkTest::Config;
 
 sub build {
   get('/', sub {
-    res("Hello world!");
+    res(template('index')->(
+      title => 'Just a test',
+      content => 'Hello world!'
+    ));
   });
 
   get('/json', sub {

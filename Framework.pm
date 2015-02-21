@@ -13,6 +13,7 @@ our @EXPORT = (
 
 sub new {
   my $self = shift;
+  Framework::Base::init_templates();
   $self->build();
   return $self;
 }
