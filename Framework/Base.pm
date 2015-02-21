@@ -215,6 +215,11 @@ sub make_error {
 # Templates
 #
 
+sub init_templates {
+  # scan template dir for templates (parts first), eval them, and add them with
+  # add template
+}
+
 sub template {
   my ($key) = @_;
   return $$templates{$key};
