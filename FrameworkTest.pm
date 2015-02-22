@@ -6,14 +6,12 @@ use Framework;
 
 use FrameworkTest::Utils;
 use FrameworkTest::Strings;
-use FrameworkTest::Config;
 use FrameworkTest::ConfigDefault;
+use FrameworkTest::Config;
 
 #
 # Routes
 #
-
-our $manapass = '$2a$10$2sSGbOusRZbGYc2tgZPrr.yJUURMjLFurK1mPivACsMNoQTK8LxDy';
 
 sub build {
   before_process_request(sub{
@@ -32,7 +30,7 @@ sub build {
   });
 
   get('/upload', sub {
-    res(template('form_test')->('File Upload'));
+    res(template('form_test')->(title => 'File Upload'));
   });
 
   get('/newhash', sub {
@@ -63,7 +61,7 @@ sub post_stuff {
   my ($params) = @_;
 
   # check password
-  if((my $crypt = password_hash($$params{'berra'}, $manapass)) ne $manapass) {
+  if((my $crypt = password_hash($$params{berra}, get_option('mana_pass'))) ne get_option('mana_pass')) {
     make_error(get_option('s_wrongpass'));
   }
 
@@ -88,6 +86,10 @@ sub post_stuff {
   make_thumbnail(get_option('img_dir') . $$fileinfo{filename},
     get_option('thumb_dir') . $$fileinfo{thumb}, $$fileinfo{ext},
     $$fileinfo{tn_width}, $$fileinfo{tn_height}) if $$fileinfo{ext} =~ /webm|gif|jpg|jpeg|png/;
+
+  if($$fileinfo{other}->{has_tn}) {
+    # do something
+  }
 
   res(template('form_test')->(file => $fileinfo, title => 'File Upload'))
 }

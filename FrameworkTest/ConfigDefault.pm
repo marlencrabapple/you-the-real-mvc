@@ -1,4 +1,4 @@
-package FrameworkTest::Config;
+package FrameworkTest::ConfigDefault;
 
 use strict;
 

@@ -151,7 +151,7 @@ sub make_thumbnail {
 	  return 1 unless $?;
   }
   else {
-    my $transparency = $ext =~ /\.(png|gif)$/ ? '-background transparent' : '-background white';
+    my $transparency = ($ext =~ /^(png|gif)$/) ? '-background transparent' : '-background white';
     my $method;
 
     if($ext eq 'gif') {

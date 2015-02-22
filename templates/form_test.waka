@@ -16,7 +16,7 @@
 </if>
 
 <form action="/app/post" enctype="multipart/form-data" method="POST">
-  <label>Password <input type="text" name="berra"></label>
+  <label>Password <input type="password" name="berra"></label>
   <label>File <input type="file" name="file"></label>
   <button type="submit">Submit</button>
 </form>
