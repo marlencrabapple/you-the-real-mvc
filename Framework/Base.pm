@@ -147,7 +147,7 @@ sub request_handler {
       die $_;
     }
 
-    return get_error()
+    return get_error() || make_error();
   }
 }
 
@@ -155,7 +155,7 @@ sub res {
   my ($content, $contenttype, $status) = @_;
 
   if(ref($content)) {
-    $content = to_json($content);
+    $content = to_json($content, { pretty => get_option('pretty_json') });
     $contenttype = 'application/json' unless $contenttype
   }
 

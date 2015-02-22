@@ -13,6 +13,7 @@ add_option('debug_mode', 1);
 add_option('max_unicode', 1114111);
 add_option('template_dir', './remplates');
 add_option('minify', 0);
+add_option('pretty_json', 1);
 
 #
 # Strings

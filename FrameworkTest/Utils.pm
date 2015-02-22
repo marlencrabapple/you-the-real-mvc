@@ -6,7 +6,7 @@ use parent 'Exporter';
 use Framework;
 
 our @EXPORT = (
-  qw(analyze_image process_file make_thumbnail)
+  qw(analyze_image process_file get_thumbnail_dimensions make_thumbnail)
 );
 
 #
@@ -114,22 +114,74 @@ sub analyze_webm {
 
 	# get webm info
 	$stdout = `$ffprobe -v quiet -print_format json -show_format -show_streams $file`;
-	$stdout = decode_json($stdout) or return 1;
-
+	$stdout = from_json($stdout) or return 1;
+  
 	# check if file is legitimate
 	return (undef, undef, 1) if(!%$stdout); # empty json response from ffprobe
 	return (undef, undef, 1) unless($$stdout{format}->{format_name} eq 'matroska,webm'); # invalid format
-	return (undef, undef, 2) if(scalar @{$$stdout{streams}} > 1); # too many streams
-	return (undef, undef, 1) if(@{$$stdout{streams}}[0]->{codec_name} ne 'vp8'); # stream isn't webm
-	return (undef, undef, 1) unless(@{$$stdout{streams}}[0]->{width} and @{$$stdout{streams}}[0]->{height});
-	return (undef, undef, 1) if(!$$stdout{format} or $$stdout{format}->{duration} > 120);
+	return (undef, undef, 2) if(scalar @{$$stdout{streams}} > (get_option('webm_allow_audio') ? 2 : 1)); # too many streams
+	return (undef, undef, 1) if(!$$stdout{format} or $$stdout{format}->{duration} > get_option('webm_max_length'));
+
+  foreach my $stream (@{$$stdout{streams}}) {
+    if($$stream{codec_type} eq 'video') {
+      return (undef, undef, 1) if $$stream{codec_name} ne 'vp8';
+      return (undef, undef, 1) unless $$stream{width} and $$stream{height};
+    }
+    #elsif($$stream{codec_type} eq 'audio') {
+    #
+    #}
+    elsif($$stream{codec_type} ne 'audio') {
+      return (undef, undef, 1)
+    }
+  }
 
 	($width, $height) = (@{$$stdout{streams}}[0]->{width}, @{$$stdout{streams}}[0]->{height});
   return ($width, $height);
 }
 
 sub make_thumbnail {
+  my ($file, $thumb, $ext, $tn_width, $tn_height) = @_;
+  my $quality = 50;
+  my $convert = get_option('convert_path') || 'convert';
 
+  if($ext eq 'webm') {
+	  my $ffmpeg = get_option('ffmpeg_path');
+    $thumb =~ s/webm/jpg/i;
+	  `$ffmpeg -i '$file' -v quiet -ss 00:00:00 -an -vframes 1 -f mjpeg -vf scale=$tn_width:$tn_height $thumb 2>&1`;
+
+	  return 1 unless $?;
+  }
+  else {
+    my $transparency = $ext =~ /\.(png|gif)$/ ? '-background transparent' : '-background white';
+    my $method = $ext eq '.gif' ? '-coalesce -sample' : '-resize';
+    `$convert $transparency '$file' $method ${tn_width}x${tn_height}! -quality $quality $thumb`;
+
+    return 2 unless $?;
+  }
+}
+
+sub get_thumbnail_dimensions {
+  my ($width, $height, $op) = @_;
+	my ($tn_width, $tn_height, $max_w, $max_h);
+
+  $max_w = $op ? get_option('tn_max_width_op') : get_option('tn_max_width');
+  $max_h = $op ? get_option('tn_max_height_op') : get_option('tn_max_height');
+
+	if($width <= $max_w and $height <= $max_h) {
+		$tn_width = $width;
+		$tn_height = $height;
+	}
+	else {
+		$tn_width = $max_w;
+		$tn_height = int(($height * ($max_w)) / $width);
+
+		if($tn_height > $max_h) {
+			$tn_width = int(($width * ($max_h)) / $height);
+			$tn_height = $max_h;
+		}
+	}
+
+	return ($tn_width, $tn_height)
 }
 
 sub process_file {
@@ -160,14 +212,23 @@ sub process_file {
 
   # generate random filename - fudges the microseconds
   my $filebase = $time . sprintf("%03d", int(rand(1000)));
-	my $filename = get_option('img_dir') . "$filebase.$ext";
-	my $thumbnail = get_option('thumb_dir') . $filebase . "s.$ext";
+	my $filename = "$filebase.$ext";
 	$filename .= get_option('munge_unknown') unless($known);
 
   # copy file, get md5, etc.
-  my ($md5, $buffer) = @_;
+  my ($md5sum, $md5, $buffer) = @_;
 
-  open my $out_fh, ">>", $filename or make_error(get_option('s_upload_io') . ": $!");
+  $md5sum = 'md5sum ' . $file->path;
+  $md5 = `$md5sum`;
+	($md5) = $md5 =~ /^([0-9a-f]+)/ unless($?);
+
+  if($md5) {
+    # i guess this is where we would check for dupes
+  }
+
+  open my $out_fh, ">>", get_option('img_dir') . $filename
+    or make_error(get_option('s_upload_io') . ": $!");
+
   binmode $out_fh;
   while(read($fh, $buffer, 1024)) {
     print $out_fh $buffer
@@ -175,7 +236,14 @@ sub process_file {
   close $fh;
   close $out_fh;
 
-  return ($ext, $width, $height);
+  return {
+    filename => $filename,
+    filebase => $filebase,
+    ext => $ext,
+    width => $width,
+    height => $height,
+    md5 => $md5
+  }
 }
 
 1;
