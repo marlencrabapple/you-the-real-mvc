@@ -110,7 +110,8 @@ add_option('s_sqlnuke', 'Nuke password:');
 add_option('s_sqlexecute', 'Execute');
 
 add_option('s_toobig', 'This image is too large!  Upload something smaller!');
-add_option('s_toobigornone', 'Either this image is too big or there is no image at all.  Yeah.');
+add_option('s_empty', 'The file you tried to upload is empty.');
+add_option('s_toobigornone', 'Either this image is too big or there is no image at all. Yeah.');
 add_option('s_reporterr', 'Error: Cannot find reply.');					# Returns error when a reply (res) cannot be found
 add_option('s_upfail', 'Error: Upload failed.');							# Returns error for failed upload (reason: unknown?)
 add_option('s_norec', 'Error: Cannot find record.');						# Returns error when record cannot be found

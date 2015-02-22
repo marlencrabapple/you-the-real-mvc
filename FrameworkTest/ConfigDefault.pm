@@ -35,7 +35,7 @@ add_option('webm_allow_audio', 1);
 # taken mostly from analyze_webm()
 my $videohandler = sub {
   my ($file, $filebase) = @_;
-	my ($ffprobe, $stdout, $width, $height, $tn_w, $tn_h);
+	my ($ffprobe, $stdout, $width, $height, $tn_w, $tn_h, @tbs);
 
   my $filepath = $file->path;
   my $thumbpath = get_option('thumb_dir') . $filebase . "s.jpg";
@@ -49,7 +49,7 @@ my $videohandler = sub {
 
 	# check if file is legitimate
 	return (undef, undef, { warning => 1 }) if(!%$stdout); # empty json response from ffprobe
-	return (undef, undef, { warning => 2 }) if(scalar @{$$stdout{streams}} > 2); # too many streams
+	#return (undef, undef, { warning => 2 }) if(scalar @{$$stdout{streams}} > 2); # too many streams
 
   foreach my $stream (@{$$stdout{streams}}) {
     if($$stream{codec_type} eq 'video') {
@@ -57,15 +57,15 @@ my $videohandler = sub {
       ($width, $height) = ($$stream{width}, $$stream{height})
     }
     elsif($$stream{codec_type} ne 'audio') {
-      return (undef, undef, { warning => 1 })
+      #return (undef, undef, { warning => 1 })
     }
   }
 
   ($tn_w, $tn_h) = FrameworkTest::get_thumbnail_dimensions($width, $height, 1);
 
   my $ffmpeg = get_option('ffmpeg_path');
-  `$ffmpeg -i '$filepath' -v quiet -ss 00:00:00 -an -vframes 1 -f mjpeg -vf scale=$tn_w:$tn_h $thumbpath 2>&1`;
 
+  `$ffmpeg -i $filepath -v quiet -ss 00:00:00 -an -vframes 1 -f mjpeg -vf scale=$tn_w:$tn_h $thumbpath 2>&1`;
   return ($width, $height, { tn_width => $tn_w, tn_height => $tn_h, has_thumb => 1 })
 };
 

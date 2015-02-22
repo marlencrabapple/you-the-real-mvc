@@ -145,9 +145,9 @@ sub make_thumbnail {
 
   if($ext eq 'webm') {
 	  my $ffmpeg = get_option('ffmpeg_path');
+
     $thumb =~ s/webm/jpg/i;
 	  `$ffmpeg -i '$file' -v quiet -ss 00:00:00 -an -vframes 1 -f mjpeg -vf scale=$tn_width:$tn_height $thumb 2>&1`;
-
 	  return 1 unless $?;
   }
   else {
@@ -160,16 +160,14 @@ sub make_thumbnail {
       }
       else {
         $file .= '[0]';
+        $method = '-sample';
       }
     }
     else {
       $method = '-resize';
     }
 
-    print $method, "\n";
-
     `$convert $transparency $file $method ${tn_width}x${tn_height}! -quality $quality $thumb`;
-
     return 2 unless $?;
   }
 }
