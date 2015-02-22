@@ -1,0 +1,8 @@
+<part header>
+<form action="/app/newhash" enctype="multipart/form-data" method="POST">
+  <label>Password <input type="text" name="berra"></label>
+  <label>Salt <input type="text" name="salt"></label>
+  <label>Cost <input type="text" name="cost"></label>
+  <button type="submit">Submit</button>
+</form>
+<part footer>

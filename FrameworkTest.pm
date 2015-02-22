@@ -13,7 +13,7 @@ use FrameworkTest::ConfigDefault;
 # Routes
 #
 
-our $manapass = '$2a$10$2sSGbOusRZbGYc2tgZPrr.yJUURMjLFurK1mPivACsMNoQTK8LxDy';
+our $manapass = '$2y$10$2sSGbOusRZbGYc2tgZPrr.yJUURMjLFurK1mPivACsMNoQTK8LxDy';
 
 sub build {
   before_process_request(sub{
@@ -31,8 +31,20 @@ sub build {
     res(['wait', 'what']);
   });
 
-  get('/form', sub {
+  get('/uploadform', sub {
     res(template('form_test')->());
+  });
+
+  get('/newhash', sub {
+    res(template('hash_form')->());
+  });
+
+  post('/newhash', sub {
+    my ($params) = @_;
+
+    res({
+      hash => password_hash($$params{berra}, $$params{salt}, $$params{cost})
+    });
   });
 
   post('/post', sub {
