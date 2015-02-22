@@ -35,8 +35,9 @@ sub run {
     my $res = $self->request_handler($env);
     return $res;
 
+    # currently only for redirect(), but should probably be used for res() too
     RES_OVERRIDE:
-      $res = get_error();
+      $res = get_res();
       return $res;
   };
 

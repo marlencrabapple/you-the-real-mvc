@@ -17,7 +17,7 @@ use Encode qw(decode encode);
 use Data::Entropy::Algorithms qw(rand_bits);
 use Crypt::Eksblowfish::Bcrypt qw(bcrypt bcrypt_hash en_base64 de_base64);
 
-our ($self, $env, $req, $section, $error, $templates, @before_process_request, @before_dispatch);
+our ($self, $env, $req, $section, $res, $templates, @before_process_request, @before_dispatch);
 our $options = { global => {} };
 
 our $routes = {
@@ -32,7 +32,7 @@ our @EXPORT = (
   @Plack::Response::EXPORT,
   qw(encode decode Dumper get_option add_option set_section get_section),
   qw(before_process_request before_dispatch request_handler),
-  qw(get post res redirect get_error set_error get_script_name),
+  qw(get post res redirect get_res set_res get_script_name),
   qw(make_error compile_template template add_template to_json from_json),
   qw(password_hash)
 );
@@ -80,12 +80,12 @@ sub add_route {
   };
 }
 
-sub set_error {
-  $error = shift;
+sub set_res {
+  $res = shift;
 }
 
-sub get_error {
-  return $error;
+sub get_res {
+  return $res;
 }
 
 sub request_handler {
@@ -173,12 +173,12 @@ sub request_handler {
       die $_;
     }
 
-    return get_error() || make_error();
+    return get_res() || make_error();
   }
 }
 
 sub res {
-  my ($content, $contenttype, $status) = @_;
+  my ($content, $contenttype, $status, $return) = @_;
 
   if(ref($content)) {
     $content = to_json($content, { pretty => get_option('pretty_json') });
@@ -186,14 +186,15 @@ sub res {
       . get_option('charset', get_section()) unless $contenttype
   }
 
-  return [
-    $status || 200,
-    [ 'Content-type', ($contenttype || 'text/html; charset='
-      . get_option('charset', get_section())) ],
-    [ encode_string($content, get_option('charset', get_section())) ]
-    #[ $content ]
-    #[ decode_string($content, get_option('charset', get_section())) ]
-  ]
+  my $res = $req->new_response($status || 200);
+  $res->content_type($contenttype || ('text/html; charset='
+    . get_option('charset', get_section())));
+  $res->body(encode_string($content, get_option('charset', get_section())));
+  $res->content_encoding('gzip') if get_option('gzip', get_section());
+
+  set_res($res->finalize);
+  return $res if $return;
+  goto RES_OVERRIDE;
 }
 
 sub redirect {
@@ -204,7 +205,7 @@ sub redirect {
 
   print Dumper($env, $req);
 
-  set_error($res->finalize);
+  set_res($res->finalize);
   goto RES_OVERRIDE;
 }
 
@@ -219,8 +220,8 @@ sub make_error {
     $res = template('error')->(error => $content)
   }
 
-  set_error(
-    res($res, $contenttype, ($status || 500))
+  set_res(
+    res($res, $contenttype, ($status || 500), 1)
   );
 
   die $_, $content;

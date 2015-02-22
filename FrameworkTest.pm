@@ -71,8 +71,7 @@ sub build {
   });
 
   post('/post', sub {
-    my ($params) = @_;
-    post_stuff($params)
+    post_stuff(@_)
   });
 
   get('/admin/:board', sub {
@@ -86,31 +85,39 @@ sub build {
 
 sub post_stuff {
   my ($params, $req) = @_;
+  my ($file, $fileinfo);
 
   # handle file
-  my $fileinfo = process_file($req->upload('file'), time());
-  ($$fileinfo{tn_width}, $$fileinfo{tn_height}) = (get_thumbnail_dimensions($$fileinfo{width}, $$fileinfo{height}, 1));
+  $file = $req->upload('file');
 
-  # get proper thumbnail extension
-  if($$fileinfo{other}->{tn_ext}) {
-    $$fileinfo{tn_ext} = $$fileinfo{other}->{tn_ext}
-  }
-  elsif($$fileinfo{ext} eq 'webm') {
-    $$fileinfo{tn_ext} = 'jpg'
+  if($file) {
+    $fileinfo = process_file($file, time());
+    ($$fileinfo{tn_width}, $$fileinfo{tn_height}) = (get_thumbnail_dimensions($$fileinfo{width}, $$fileinfo{height}, 1));
+
+    # get proper thumbnail extension
+    if($$fileinfo{other}->{tn_ext}) {
+      $$fileinfo{tn_ext} = $$fileinfo{other}->{tn_ext}
+    }
+    elsif($$fileinfo{ext} eq 'webm') {
+      $$fileinfo{tn_ext} = 'jpg'
+    }
+    else {
+      $$fileinfo{tn_ext} = $$fileinfo{ext}
+    }
+
+    # make thumbnail
+    $$fileinfo{thumb} = $$fileinfo{filebase} . "s.$$fileinfo{tn_ext}";
+
+    make_thumbnail(get_option('img_dir') . $$fileinfo{filename},
+      get_option('thumb_dir') . $$fileinfo{thumb}, $$fileinfo{ext},
+      $$fileinfo{tn_width}, $$fileinfo{tn_height}) if $$fileinfo{ext} =~ /webm|gif|jpg|jpeg|png/;
+
+    if($$fileinfo{other}->{has_tn}) {
+      # do something
+    }
   }
   else {
-    $$fileinfo{tn_ext} = $$fileinfo{ext}
-  }
-
-  # make thumbnail
-  $$fileinfo{thumb} = $$fileinfo{filebase} . "s.$$fileinfo{tn_ext}";
-
-  make_thumbnail(get_option('img_dir') . $$fileinfo{filename},
-    get_option('thumb_dir') . $$fileinfo{thumb}, $$fileinfo{ext},
-    $$fileinfo{tn_width}, $$fileinfo{tn_height}) if $$fileinfo{ext} =~ /webm|gif|jpg|jpeg|png/;
-
-  if($$fileinfo{other}->{has_tn}) {
-    # do something
+    make_error(get_option('s_nopic'))
   }
 
   res(template('form_test')->(file => $fileinfo, title => 'File Upload'))
