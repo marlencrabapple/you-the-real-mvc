@@ -14,9 +14,8 @@ use Plack::Request;
 use Plack::Response;
 use base qw(Exporter);
 use Encode qw(decode encode);
-use Plack::Util::Accessor qw(rethrow);
 use Data::Entropy::Algorithms qw(rand_bits);
-use Crypt::Eksblowfish::Bcrypt qw(bcrypt bcrypt_hash en_base64);
+use Crypt::Eksblowfish::Bcrypt qw(bcrypt bcrypt_hash en_base64 de_base64);
 
 our ($self, $env, $req, $section, $error, $templates, @before_process_request);
 our $options = { global => {} };
@@ -31,7 +30,7 @@ our @EXPORT = (
   @Data::Dumper::EXPORT,
   @Plack::Request::EXPORT,
   @Plack::Response::EXPORT,
-  qw($req $env rethrow encode decode Dumper get_option add_option set_section),
+  qw($req $env encode decode Dumper get_option add_option set_section),
   qw(get_section before_process_request request_handler get post res),
   qw(make_error compile_template template add_template to_json from_json),
   qw(password_hash)
@@ -481,11 +480,9 @@ sub password_hash {
     }
 
     $cost = ($cost && $cost =~ /^[0-9]{2}$/ && $cost > 4 && $cost < 31) ? $cost : 10;
+
     my $hash = bcrypt_hash(
       { key_nul => 1, cost => $cost, salt => $salt }, $password);
-
-    print Dumper(
-      { password => $password, salt => $salt, cost => $cost, hash => $hash });
 
     return "\$2y\$$cost\$" . en_base64($salt) . en_base64($hash);
   }

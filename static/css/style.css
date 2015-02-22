@@ -1,0 +1,196 @@
+body {
+  background: #EEF2FF url(/img/fade-blue.png) top center repeat-x;
+  font-family: arial,helvetica,sans-serif;
+  font-size: 10pt;
+  margin: 5px
+}
+
+form {
+  display: inline-block;
+}
+
+h1, h2, h3, h4 {
+  font-family: Tahoma,sans-serif;
+  letter-spacing: -1px;
+  text-align:center;
+  color: #AF0A0F;
+}
+
+a, a:visited {
+  color: #34345C;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid #B7C5D9;
+  height: 0;
+  clear: both;
+}
+
+.thread {
+  margin-bottom: 10px
+}
+
+.post {
+  margin: 4px 0;
+}
+
+.post blockquote {
+  font-size: 10pt;
+}
+
+.post blockquote .quotelink, .post blockquote .deadlink {
+  color: #DD0000!important;
+}
+
+.post blockquote .deadlink {
+  text-decoration: line-through;
+}
+
+.post blockquote .quote {
+ color: #789922;
+}
+
+.post .postinfo {
+  padding: 4px 10px 0;
+}
+
+.post .postinfo .name {
+  color: #117743;
+  font-weight: bold;
+}
+
+.post .thumb {
+  border: none;
+  float: left;
+  margin: 2px 10px;
+}
+
+.post .fileinfo {
+  margin-left: 10px;
+}
+
+.post .deletedimg {
+  width: 75px;
+  height: 75px;
+  border: 3px dotted #555;
+  text-align:center;
+  font-weight: bold;
+  padding: 15px 0;
+  box-sizing: border-box;
+}
+
+.op {
+  display: inline;
+  clear: both;
+  margin: 4px 0px;
+}
+
+.reply {
+  border: 1px solid #B7C5D9;
+  border-left: none;
+  border-top: none;
+  background: #D6DAF0;
+  color: #000;
+  display: table;
+  padding: 2px;
+}
+
+.reply.highlight, .reply:target {
+  background-color: #D6BAD0;
+  border-color: #BA9DBF;
+}
+
+.reply .replythumb {
+margin-bottom: 5px;
+}
+
+.dd {
+display: block;
+float: left;
+margin-right: 2px;
+color: #B7C5D9;
+}
+
+.no a {
+  text-decoration: none;
+  color: #000
+}
+
+.threadnav {
+  text-align: left;
+}
+
+.gallery {
+  text-align:center;
+}
+
+.gallery .imgcontainer {
+  display: inline-block;
+  margin: 10px 5px
+}
+
+.gallery .galimage {
+  display: inline-block;
+  width: 150px;
+  height: 150px;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 0 2px rgba(0,0,0,0.5);
+}
+
+.footer {
+  text-align: center;
+  font-size: x-small!important;
+  padding-bottom: 10px;
+  padding-top: 4px;
+  clear: both;
+}
+
+.loginform table {
+  margin: 0 auto;
+}
+
+.postinput {
+  padding: 3px 4px;
+  border: 1px solid #bbb;
+  width: 100px;
+}
+
+.tagcloud {
+  margin: 0 auto;
+  padding: 0;
+  font-size: 20px;
+  list-style: none;
+  width: 70%;
+  text-align: center;
+}
+
+.tagcloud li {
+  display: inline-block
+}
+
+.pagelist {
+  font-size: 13px!important;
+  padding: 3px 7px;
+  border: none;
+  background: #D6DAF0;
+  border-right: 1px solid #B7C5D9;
+  border-bottom: 1px solid #B7C5D9;
+  overflow: hidden;
+  color: #89A;
+  display: inline-block;
+}
+
+.pagelist a {
+  text-decoration: none;
+}
+
+.omitted {
+  color: #707070;
+}
+
+input[name="terms"] {
+  margin: 5px 0 0
+}

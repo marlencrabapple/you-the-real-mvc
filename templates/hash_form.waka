@@ -1,4 +1,6 @@
 <part header>
+<h1><var $title></h1>
+<hr>
 <form action="/app/newhash" enctype="multipart/form-data" method="POST">
   <label>Password <input type="text" name="berra"></label>
   <label>Salt <input type="text" name="salt"></label>

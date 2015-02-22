@@ -1,1 +1,9 @@
+<hr>
+<div class="footer">
+  <footer>
+    - <a href="//wakaba.c3.cx/">wakaba</a>
+  	+ <a href="//onlinebargainshrimptoyourdoor.com/">glaukaba <if get_option('display_version', get_section())><var get_option('s_version')></if></a> -<br>
+  	<var get_option('s_footer')>
+  </footer>
+</div>
 </body>

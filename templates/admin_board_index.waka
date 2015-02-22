@@ -1,2 +1,49 @@
 <part header>
+<h1><var $title></h1>
+<hr>
+
+<div class="threadnav tnavtop">
+  [<a href="#bottom">Bottom</a>]
+</div>
+
+<hr>
+
+<div class="pagelist">
+  <if $page != 0><button onclick="location.href='<var $self>?task=term&amp;term=<var $termid>&amp;page=<var $page - 1>'">Previous</button></if>
+  <if $page == 0>Previous</if>
+  <loop $pages>
+    <if $_ != $page>[<a href="<var $self>?task=term&amp;term=<var $termid>&amp;page=<var $_>"><var $_></a>]</if>
+    <if $_ == $page>[<var $_>]</if>
+  </loop>
+  <if $page != scalar(@{$pages}) - 1><button onclick="location.href='<var $self>?task=term&amp;term=<var $termid>&amp;page=<var $page + 1>'">Next</button></if>
+  <if $page == scalar(@{$pages}) - 1>Next</if>
+</div>
+
+<hr>
+
+<loop $threads>
+
+}. THREAD_TEMPLATE_PART .q{
+
+<hr>
+</loop>
+
+<div class="pagelist">
+  <if $page != 0><button onclick="location.href='<var $self>?task=term&amp;term=<var $termid>&amp;page=<var $page - 1>'">Previous</button></if>
+  <if $page == 0>Previous</if>
+  <loop $pages>
+    <if $_ != $page>[<a href="<var $self>?task=term&amp;term=<var $termid>&amp;page=<var $_>"><var $_></a>]</if>
+    <if $_ == $page>[<var $_>]</if>
+  </loop>
+  <if $page != scalar(@{$pages}) - 1><button onclick="location.href='<var $self>?task=term&amp;term=<var $termid>&amp;page=<var $page + 1>'">Next</button></if>
+  <if $page == scalar(@{$pages}) - 1>Next</if>
+</div>
+
+<hr>
+
+<div class="threadnav tnavbottom">
+  [<a href="#top">Top</a>]
+</div>
+
+<a id="bottom"></a>
 <part footer>

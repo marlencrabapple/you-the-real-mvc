@@ -154,4 +154,6 @@ add_option('s_invalidwebm', 'Invalid or corrupt WebM file.');
 add_option('s_webmaudio', 'WebM files with audio are not allowed.');
 add_option('s_webmduration', 'WebM file is too long.');
 
+add_option('s_footer', 'All trademarks and copyrights on this page are owned by their respective parties. Images uploaded are the responsibility of the Poster. Comments are owned by the Poster.');
+
 1;

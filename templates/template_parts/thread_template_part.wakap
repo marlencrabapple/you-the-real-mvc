@@ -1,0 +1,119 @@
+<loop $posts>
+
+<if !$threadno> <if $hrbeforethread><hr></if> </if>
+
+<div class="post">
+  <div class="dd">&gt;&gt;</div>
+
+  <if !$threadno>
+  <div class="op" id="reply<var $num>">
+    <a id="p<var $num>"></a>
+
+    <if $filename>
+      <if !$imgdeleted>
+      <div class="fileinfo">
+        File: <a href="/src/<var $image>" title="<var $filename.$ext>" target="_blank"><var concat_fn($filename.$ext)></a> - (<var $size/1000>KB, <var $width>x<var $height>)
+      </div>
+      <a class="thumblink" href="/src/<var $image>" target="_blank">
+        <img class="thumb opthumb" src="/tn/<var $thumb>" data-md5="<var $md5>" width="<var $tnwidth>" height="<var $tnheight>" style="width: <var $tnwidth>px; height: <var $tnheight>px">
+      </a>
+      </if>
+      <if $imgdeleted>
+        <div class="fileinfo">
+          File: <var concat_fn($filename.$ext)> - (<var $size/1000>KB, <var $width>x<var $height>)
+        </div>
+        <div class="thumb deletedimg">
+          Image Deleted :(
+        </div>
+      </if>
+    </if>
+
+    <div class="postinfo">
+      <span class="name"><var $name></span>
+      <span class="trip"><var $trip></span>
+      <if $id><span class="id">(ID: <var $id>)</span></if>
+      <span class="date"><var $prettydate></span>
+      <span class="no">
+        <a href="<var $self>?task=thread&no=<var $num>#p<var $num>">No.</a><var $num>
+      </span>
+
+      <if $termindex == 1>
+      <span class="replylink">[<a href="<var $self>?task=thread&amp;no=<var $num>">Reply</a>]</span>
+      </if>
+    </div>
+
+    <blockquote>
+      <var $comment>
+    </blockquote>
+  </div>
+
+    <if $omitted>
+    <div class="omitted">
+      <var $omitted>
+
+      <if $omitted == 1>
+      post
+      </if>
+      <if $omitted != 1>
+      posts
+      </if>
+
+      <if $omittedimages>
+      and <var $omittedimages>
+
+        <if $omittedimages == 1>
+        image
+        </if>
+        <if $omittedimages != 1>
+        images
+        </if>
+
+      </if>
+
+      omitted. Click reply to view.
+    </div>
+    </if>
+
+  </if>
+
+  <if $threadno>
+
+  <div class="reply" id="p<var $num>">
+    <div class="postinfo">
+      <span class="name"><var $name></span>
+      <span class="trip"><var $trip></span>
+      <if $id><span class="id">(ID: <var $id>)</span></if>
+      <span class="date"><var $prettydate></span>
+      <span class="no">
+        <a href="<var $self>?task=thread&no=<var $threadno>#p<var $num>">No.</a><var $num>
+      </span>
+    </div>
+
+    <if $filename>
+      <if !$imgdeleted>
+      <div class="fileinfo">
+        File: <a href="/src/<var $image>" target="_blank" title="<var $filename.$ext>"><var concat_fn($filename.$ext)></a> - (<var $size/1000>KB, <var $width>x<var $height>)
+      </div>
+
+      <a class="thumblink" href="/src/<var $image>" target="_blank">
+        <img class="thumb replythumb" src="/tn/<var $thumb>" data-md5="<var $md5>" width="<var $tnwidth>" height="<var $tnheight>" style="width: <var $tnwidth>px; height: <var $tnheight>px">
+      </a>
+      </if>
+      <if $imgdeleted>
+        <div class="fileinfo">
+          File: <var concat_fn($filename.$ext)> - (<var $size/1000>KB, <var $width>x<var $height>)
+        </div>
+        <div class="thumb deletedimg">
+          Image Deleted :(
+        </div>
+      </if>
+    </if>
+
+    <blockquote>
+      <var $comment>
+    </blockquote>
+  </div>
+  </if>
+</div>
+
+</loop>

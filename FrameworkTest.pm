@@ -36,11 +36,13 @@ sub build {
   });
 
   get('/newhash', sub {
-    res(template('hash_form')->());
+    res(template('hash_form')->(title => 'password_hash() Test'));
   });
 
   post('/newhash', sub {
     my ($params) = @_;
+
+    make_error('You must enter a password to be hashed.') unless $$params{berra};
 
     res({
       hash => password_hash($$params{berra}, $$params{salt}, $$params{cost})
