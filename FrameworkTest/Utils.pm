@@ -14,21 +14,21 @@ our @EXPORT = (
 #
 
 sub analyze_image {
-  my ($file, $name) = @_;
+  my ($file, $handle) = @_;
 	my (@res);
 
 	safety_check($file);
 
-	return ("jpg", @res) if(@res = analyze_jpeg($name));
-	return ("png", @res) if(@res = analyze_png($name));
-	return ("gif", @res) if(@res = analyze_gif($name));
+	return ("jpg", @res) if(@res = analyze_jpeg($handle));
+	return ("png", @res) if(@res = analyze_png($handle));
+	return ("gif", @res) if(@res = analyze_gif($handle));
 
 	if(get_option('allow_webm')) {
 		return ("webm", @res) if(@res = analyze_webm($file));
 	}
 
 	# find file extension for unknown files
-	my ($ext) = $name =~ /\.([^\.]+)$/;
+	my ($ext) = $file =~ /\.([^\.]+)$/;
 	return (lc($ext), 0, 0);
 }
 
@@ -110,12 +110,14 @@ sub analyze_webm {
 	my ($file) = @_;
 	my ($ffprobe, $stdout, $width, $height);
 
-	$ffprobe = get_option('ffprobe_path');
+  my ($filename, $ext) = split('\.', $file);
+  return () unless $ext eq 'webm';
 
 	# get webm info
+  $ffprobe = get_option('ffprobe_path');
 	$stdout = `$ffprobe -v quiet -print_format json -show_format -show_streams $file`;
 	$stdout = from_json($stdout) or return 1;
-  
+
 	# check if file is legitimate
 	return (undef, undef, 1) if(!%$stdout); # empty json response from ffprobe
 	return (undef, undef, 1) unless($$stdout{format}->{format_name} eq 'matroska,webm'); # invalid format
@@ -127,9 +129,6 @@ sub analyze_webm {
       return (undef, undef, 1) if $$stream{codec_name} ne 'vp8';
       return (undef, undef, 1) unless $$stream{width} and $$stream{height};
     }
-    #elsif($$stream{codec_type} eq 'audio') {
-    #
-    #}
     elsif($$stream{codec_type} ne 'audio') {
       return (undef, undef, 1)
     }
@@ -202,7 +201,7 @@ sub process_file {
     make_error(get_option('s_webmaudio')) if $warning == 2;
   }
 
-  my $known = $width || get_options('filetypes')->{$ext};
+  my $known = $width || get_option('filetypes')->{$ext};
 
   make_error(get_option('s_badformat')) unless(get_option('allow_unknown') or $known);
 	make_error(get_option('s_badformat')) if(grep { $_ eq $ext } @{get_option('forbidden_extensions')});
