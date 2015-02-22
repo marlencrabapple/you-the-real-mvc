@@ -1,0 +1,6 @@
+<part header>
+<form action="/post" enctype="multipart/form-data" method="POST">
+  <label>File <input type="file" name="file"></label>
+  <button type="submit">Submit</button>
+</form>
+<part footer>

@@ -3,7 +3,13 @@ package FrameworkTest;
 use strict;
 
 use Framework;
+
+use FrameworkTest::Utils;
 use FrameworkTest::Config;
+
+#
+# Routes
+#
 
 sub build {
   get('/', sub {
@@ -14,42 +20,25 @@ sub build {
   });
 
   get('/json', sub {
-    make_error(['wait', 'what'], 403);
-    res({ hello => 'world'});
+    res(['wait', 'what']);
   });
 
-  get('/admin/:board', sub {
+  get('/form', sub {
+    res(template('form_test')->());
+  });
+
+  post('/post', sub {
     my ($params) = @_;
-
-    res("Just a test");
-  }, {
-    board => sub { 1 }
+    post_stuff($params)
   });
+}
 
-  get('/admin/:board/:page', sub {
-    my ($params) = @_;
+sub post_stuff {
+  my ($params) = @_;
 
-    res("Just a test\n\nPage: $$params{page} of $$params{board}");
-  }, {
-    board => sub { 1 },
-    page => sub {
-      # This doesn't work because aetting the page to '0' causes request_handler()
-      # to think we didn't return anything after the initial 1 because of Perl's
-      # lack of typing.
-      #
-      # Update: Got it working, but its bad practice anyways so we'll throw a 404
-      # like any other site.
-
-      # # Set page to zero if invalid and avoid a 404
-      # my $page = shift;
-      # $page = ($page =~ /[0-9]+/) ? $page : '0';
-      #
-      # return (1, $page);
-
-      return 1 if shift =~ /[0-9]+/;
-      return 0;
-    }
-  });
+  process_file($req->upload('file'));
+  
+  res("File uploaded!");
 }
 
 1;

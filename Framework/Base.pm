@@ -3,6 +3,7 @@ package Framework::Base;
 use strict;
 
 use JSON;
+use Net::IP;
 use Try::Tiny;
 use File::Find;
 use Plack::Util;
@@ -31,32 +32,6 @@ our @EXPORT = (
   qw(get_section before_process_request request_handler get post res),
   qw(make_error compile_template template add_template to_json from_json)
 );
-
-#
-# Config Utils
-#
-
-sub get_option {
-  my ($key, $section) = @_;
-
-  $section = $section ? $section : 'global';
-  return $$options{$section}->{$key} || $$options{'global'}->{$key};
-}
-
-sub add_option {
-  my ($key, $val, $section) = @_;
-
-  $section = $section ? $section : 'global';
-  $$options{$section}->{$key} = $val;
-}
-
-sub set_section {
-  $section = shift;
-}
-
-sub get_section {
-  return $section;
-}
 
 #
 # Requests, responses, etc.
@@ -211,6 +186,32 @@ sub make_error {
 }
 
 #
+# Config Utils
+#
+
+sub get_option {
+  my ($key, $section) = @_;
+
+  $section = $section ? $section : 'global';
+  return $$options{$section}->{$key} || $$options{'global'}->{$key};
+}
+
+sub add_option {
+  my ($key, $val, $section) = @_;
+
+  $section = $section ? $section : 'global';
+  $$options{$section}->{$key} = $val;
+}
+
+sub set_section {
+  $section = shift;
+}
+
+sub get_section {
+  return $section;
+}
+
+#
 # Templates
 #
 
@@ -269,7 +270,7 @@ sub compile_template {
         elsif($name eq 'var') { $code .= '$res.=clean_string(eval{' . $args . '});' }
         elsif($name eq 'part') { $code .= '$res.=eval{template(' . $args . ')->()};' }
         elsif($name eq 'const') { my $const = eval $args; $const =~ s/(['\\])/\\$1/g; $code .= '$res.=\'' . $const . '\';' }
-        elsif($name eq 'if') { $code .= 'if(eval{'.$args.'}){' }
+        elsif($name eq 'if') { $code .= 'if(eval{' . $args . '}){' }
         elsif($name eq 'loop')
         { $code .= 'my $__a=eval{' . $args . '};if($__a){for(@$__a){my %__v=%{$_};my %__ov;for(keys %__v){$__ov{$_}=$$_;$$_=$__v{$_};}' }
       }
