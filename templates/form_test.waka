@@ -1,6 +1,22 @@
 <part header>
+<h1><var $title></h1>
+<hr>
+
+<if $file>
+<a href="/<var get_option('img_dir_http', get_section())><!var $$file{filename}>" target="_blank"><var $$file{filename}></a><br>
+
+<a href="/<var get_option('img_dir_http', get_section())><!var $$file{filename}>" target="_blank">
+  <img src="/<var get_option('thumb_dir_http', get_section())><!var $$file{thumb}>" alt="<var $$file{filename}>" title="<var $$file{filename}>">
+</a>
+
+<pre>
+<var to_json($file, { pretty =\> 1 })>
+</pre>
+<hr>
+</if>
+
 <form action="/app/post" enctype="multipart/form-data" method="POST">
-  <label>Password <input type="password" name="berra"></label>
+  <label>Password <input type="text" name="berra"></label>
   <label>File <input type="file" name="file"></label>
   <button type="submit">Submit</button>
 </form>

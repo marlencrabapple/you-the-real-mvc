@@ -267,6 +267,8 @@ sub compile_template {
   my ($str, $minify, $part) = @_;
   my ($code, $sub);
 
+  $str = $minify ? minify_html($str) : $str;
+
   while($str =~ m!(.*?)(<(/?)(var|\!var|part|const|if|loop)(?:|\s+(.*?[^\\]))>|$)!sg) {
     my ($html, $tag, $closing, $name, $args) = ($1, $2, $3, $4, $5);
 
@@ -303,7 +305,8 @@ sub compile_template {
       #. 'my $section=get_section();'
       . $code
       . '$$_=$__ov{$_} for(keys %__ov);'
-      . 'return !$minify ? $res : minify_html($res); }';
+      #. 'return !$minify ? $res : minify_html($res); }';
+      . 'return $res; }';
 
     die "Template format error" unless $sub;
   }
@@ -470,7 +473,7 @@ sub js_hash {
 sub password_hash {
   my ($password, $salt, $cost) = @_;
 
-  if($salt =~ m/\A\$2(y?)\$([0-9]{2})\$([.\/A-Za-z0-9]{22})/) {
+  if($salt =~ m/\A\$2(a?)\$([0-9]{2})\$([.\/A-Za-z0-9]{22})/) {
     return bcrypt($password, $salt);
   }
   else {
@@ -484,7 +487,7 @@ sub password_hash {
     my $hash = bcrypt_hash(
       { key_nul => 1, cost => $cost, salt => $salt }, $password);
 
-    return "\$2y\$$cost\$" . en_base64($salt) . en_base64($hash);
+    return "\$2a\$$cost\$" . en_base64($salt) . en_base64($hash);
   }
 }
 

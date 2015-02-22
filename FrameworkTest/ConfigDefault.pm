@@ -12,6 +12,9 @@ add_option('template_dir', './templates');
 add_option('img_dir', './static/src/');
 add_option('thumb_dir', './static/thumb/');
 add_option('res_dir', './static/res/');
+add_option('img_dir_http', 'src/');
+add_option('thumb_dir_http', 'thumb/');
+add_option('res_dir_http', 'res/');
 
 add_option('max_kb', 10000);
 add_option('max_image_width', 10000);
