@@ -13,9 +13,25 @@ use FrameworkTest::Config;
 # Routes
 #
 
+our $session = {};
+
 sub build {
   before_process_request(sub{
-    print "asdf\n\n";
+
+  });
+
+  before_dispatch(sub{
+    my ($env, $req, $params, $pathstr, $patharr) = @_;
+
+    if(@{$patharr}[0] eq 'admin') {
+      if((my $crypt = password_hash($$params{berra}, get_option('mana_pass'))) ne get_option('mana_pass')) {
+        #make_error(get_option('s_wrongpass'));
+        redirect(get_script_name() . '/login');
+      }
+      else {
+        $session = { crypt => $crypt };
+      }
+    }
   });
 
   get('/', sub {
@@ -23,6 +39,13 @@ sub build {
       title => 'Just a test',
       content => 'Hello world!'
     ));
+  });
+
+  get('/login', sub {
+    res(template('index')->(
+      title => 'Login',
+      content => 'Login faget'
+    ))
   });
 
   get('/json', sub {
@@ -51,6 +74,10 @@ sub build {
     my ($params) = @_;
     post_stuff($params)
   });
+
+  get('/admin/:board', sub {
+    res("Congrats!");
+  });
 }
 
 #
@@ -58,12 +85,7 @@ sub build {
 #
 
 sub post_stuff {
-  my ($params) = @_;
-
-  # check password
-  if((my $crypt = password_hash($$params{berra}, get_option('mana_pass'))) ne get_option('mana_pass')) {
-    make_error(get_option('s_wrongpass'));
-  }
+  my ($params, $req) = @_;
 
   # handle file
   my $fileinfo = process_file($req->upload('file'), time());

@@ -17,7 +17,7 @@ use Encode qw(decode encode);
 use Data::Entropy::Algorithms qw(rand_bits);
 use Crypt::Eksblowfish::Bcrypt qw(bcrypt bcrypt_hash en_base64 de_base64);
 
-our ($self, $env, $req, $section, $error, $templates, @before_process_request);
+our ($self, $env, $req, $section, $error, $templates, @before_process_request, @before_dispatch);
 our $options = { global => {} };
 
 our $routes = {
@@ -30,8 +30,9 @@ our @EXPORT = (
   @Data::Dumper::EXPORT,
   @Plack::Request::EXPORT,
   @Plack::Response::EXPORT,
-  qw($req $env encode decode Dumper get_option add_option set_section),
-  qw(get_section before_process_request request_handler get post res),
+  qw(encode decode Dumper get_option add_option set_section get_section),
+  qw(before_process_request before_dispatch request_handler),
+  qw(get post res redirect get_error set_error get_script_name),
   qw(make_error compile_template template add_template to_json from_json),
   qw(password_hash)
 );
@@ -43,6 +44,11 @@ our @EXPORT = (
 sub before_process_request {
   my $sub = shift;
   push @before_process_request, $sub;
+}
+
+sub before_dispatch {
+  my $sub = shift;
+  push @before_dispatch, $sub;
 }
 
 sub get {
@@ -105,6 +111,11 @@ sub request_handler {
       }
     }
 
+    foreach my $key (keys %{$req->cookies}) {
+      # never more than one value per key
+      $queryvars->add($key, $req->cookies->{$key})
+    }
+
     # loop through defined routes
     foreach my $route (@{$$routes{$method}}) {
       my $matches = 0;
@@ -149,6 +160,10 @@ sub request_handler {
       }
     }
 
+    foreach my $sub (@before_dispatch) {
+      $sub->($env, $req, $queryvars, $path, \@path_arr)
+    }
+
     return $match->{handler}->($queryvars, $req) if $match != 0;
     make_error(get_option('s_invalidpath'), 404);
   }
@@ -181,6 +196,18 @@ sub res {
   ]
 }
 
+sub redirect {
+  my ($url, $code) = @_;
+
+  my $res = $req->new_response;
+  $res->redirect($url, ($code || 302));
+
+  print Dumper($env, $req);
+
+  set_error($res->finalize);
+  goto RES_OVERRIDE;
+}
+
 sub make_error {
   my ($content, $status, $contenttype) = @_;
   my $res;
@@ -197,6 +224,10 @@ sub make_error {
   );
 
   die $_, $content;
+}
+
+sub get_script_name {
+  return $$env{SCRIPT_NAME}
 }
 
 #

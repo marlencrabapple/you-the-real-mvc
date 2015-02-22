@@ -26,11 +26,18 @@ sub run {
   my ($self) = @_;
 
   my $app = sub {
+    my ($env) = @_;
+
     foreach my $sub (@Framework::Base::before_process_request) {
-      $sub->();
+      $sub->($env);
     }
 
-    $self->request_handler(@_);
+    my $res = $self->request_handler($env);
+    return $res;
+
+    RES_OVERRIDE:
+      $res = get_error();
+      return $res;
   };
 
   return $app;
