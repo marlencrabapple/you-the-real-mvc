@@ -18,8 +18,8 @@ add_option('minify', 0);
 # Strings
 #
 
-add_option('invalid_path', 'Invalid path.');
-add_option('template_io_error', 'Error opening template file.');
+add_option('s_invalidpath', 'Invalid path.');
+add_option('s_template_io_error', 'Error opening template file.');
 
 #
 # Templates

@@ -117,14 +117,15 @@ sub analyze_webm {
 	$stdout = decode_json($stdout) or return 1;
 
 	# check if file is legitimate
-	return 1 if(!%$stdout); # empty json response from ffprobe
-	return 1 unless($$stdout{format}->{format_name} eq 'matroska,webm'); # invalid format
-	return 2 if(scalar @{$$stdout{streams}} > 1); # too many streams
-	return 1 if(@{$$stdout{streams}}[0]->{codec_name} ne 'vp8'); # stream isn't webm
-	return 1 unless(@{$$stdout{streams}}[0]->{width} and @{$$stdout{streams}}[0]->{height});
-	return 1 if(!$$stdout{format} or $$stdout{format}->{duration} > 120);
+	return (undef, undef, 1) if(!%$stdout); # empty json response from ffprobe
+	return (undef, undef, 1) unless($$stdout{format}->{format_name} eq 'matroska,webm'); # invalid format
+	return (undef, undef, 2) if(scalar @{$$stdout{streams}} > 1); # too many streams
+	return (undef, undef, 1) if(@{$$stdout{streams}}[0]->{codec_name} ne 'vp8'); # stream isn't webm
+	return (undef, undef, 1) unless(@{$$stdout{streams}}[0]->{width} and @{$$stdout{streams}}[0]->{height});
+	return (undef, undef, 1) if(!$$stdout{format} or $$stdout{format}->{duration} > 120);
 
 	($width, $height) = (@{$$stdout{streams}}[0]->{width}, @{$$stdout{streams}}[0]->{height});
+  return ($width, $height);
 }
 
 sub make_thumbnail {
@@ -132,7 +133,49 @@ sub make_thumbnail {
 }
 
 sub process_file {
+  my ($file, $time) = @_;
 
+  make_error(get_option('s_toobig')) if $file->size > get_option('max_kb') * 1024;
+  make_error(get_option('s_empty')) if $file->size <= 0;
+
+  # Plack::Request::Upload doesn't provide a file handle like CGI.pm so we have
+  # to create one on our own.
+  open my $fh, "<", $file->path or make_error(get_option('s_upload_io') . ": $!");
+  binmode $fh;
+
+  my ($ext, $width, $height, $warning) = analyze_image($file->path, $fh);
+
+  if(($ext eq 'webm') && ($warning)) {
+    make_error(get_option('s_invalidwebm')) if $warning == 1;
+    make_error(get_option('s_webmaudio')) if $warning == 2;
+  }
+
+  my $known = $width || get_options('filetypes')->{$ext};
+
+  make_error(get_option('s_badformat')) unless(get_option('allow_unknown') or $known);
+	make_error(get_option('s_badformat')) if(grep { $_ eq $ext } @{get_option('forbidden_extensions')});
+	make_error(get_option('s_toobig')) if(get_option('max_image_width') and $width > get_option('max_image_width'));
+	make_error(get_option('s_toobig')) if(get_option('max_image_height') and $height > get_option('max_image_height'));
+	make_error(get_option('s_toobig')) if(get_option('max_image_pixels') and ($width * $height) > get_option('max_image_pixels'));
+
+  # generate random filename - fudges the microseconds
+  my $filebase = $time . sprintf("%03d", int(rand(1000)));
+	my $filename = get_option('img_dir') . "$filebase.$ext";
+	my $thumbnail = get_option('thumb_dir') . $filebase . "s.$ext";
+	$filename .= get_option('munge_unknown') unless($known);
+
+  # copy file, get md5, etc.
+  my ($md5, $buffer) = @_;
+
+  open my $out_fh, ">>", $filename or make_error(get_option('s_upload_io') . ": $!");
+  binmode $out_fh;
+  while(read($fh, $buffer, 1024)) {
+    print $out_fh $buffer
+  }
+  close $fh;
+  close $out_fh;
+
+  return ($ext, $width, $height);
 }
 
 1;

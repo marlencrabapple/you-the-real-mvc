@@ -139,7 +139,7 @@ sub request_handler {
     }
 
     return $match->{handler}->($queryvars, $req) if $match != 0;
-    make_error(get_option('invalid_path'), 404);
+    make_error(get_option('s_invalidpath'), 404);
   }
   catch {
     if(get_option('debug_mode', get_section())) {
@@ -222,7 +222,7 @@ sub init_templates {
       my $str;
 
       # File::Find uses chdir so we only need the file name, not the full path
-      open my $fh, '<:encoding(UTF-8)', $_ or die get_option('template_io_error'), "$!";
+      open my $fh, '<:encoding(UTF-8)', $_ or die get_option('s_template_io_error'), "$!";
       while(my $row = <$fh>) {
         $str .= $row;
       }

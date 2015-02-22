@@ -33,12 +33,20 @@ sub build {
   });
 }
 
+#
+# Controllers
+#
+
 sub post_stuff {
   my ($params) = @_;
 
-  process_file($req->upload('file'));
-  
-  res("File uploaded!");
+  my ($ext, $width, $height) = process_file($req->upload('file'), time());
+
+  res({fileinfo => {
+    ext => $ext,
+    width => $width,
+    height => $height
+  }});
 }
 
 1;
