@@ -5,8 +5,9 @@ use strict;
 use Framework;
 
 use FrameworkTest::Utils;
-use FrameworkTest::Config;
 use FrameworkTest::Strings;
+use FrameworkTest::Config;
+use FrameworkTest::ConfigDefault;
 
 #
 # Routes
