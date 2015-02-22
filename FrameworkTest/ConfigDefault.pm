@@ -22,9 +22,9 @@ add_option('tn_max_width', 150);
 add_option('tn_max_height', 150);
 add_option('tn_max_width_op', 250);
 add_option('tn_max_height_op', 250);
-add_option('animated_thumbnails', 0);
+add_option('animated_thumbnails', 1);
 add_option('convert_path', 'gm convert');
-add_option('thumbnail_quality', 50);
+add_option('thumbnail_quality', 70);
 
 add_option('allow_webm', 1);
 add_option('ffmpeg_path', 'ffmpeg');

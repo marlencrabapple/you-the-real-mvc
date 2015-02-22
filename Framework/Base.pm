@@ -7,6 +7,7 @@ use Net::IP;
 use Try::Tiny;
 use File::Find;
 use Plack::Util;
+use MIME::Base64;
 use Data::Dumper;
 use HTML::Entities;
 use Plack::Request;
@@ -14,6 +15,8 @@ use Plack::Response;
 use base qw(Exporter);
 use Encode qw(decode encode);
 use Plack::Util::Accessor qw(rethrow);
+use Data::Entropy::Algorithms qw(rand_bits);
+use Crypt::Eksblowfish::Bcrypt qw(bcrypt bcrypt_hash en_base64);
 
 our ($self, $env, $req, $section, $error, $templates, @before_process_request);
 our $options = { global => {} };
@@ -30,7 +33,8 @@ our @EXPORT = (
   @Plack::Response::EXPORT,
   qw($req $env rethrow encode decode Dumper get_option add_option set_section),
   qw(get_section before_process_request request_handler get post res),
-  qw(make_error compile_template template add_template to_json from_json)
+  qw(make_error compile_template template add_template to_json from_json),
+  qw(password_hash)
 );
 
 #
@@ -38,8 +42,8 @@ our @EXPORT = (
 #
 
 sub before_process_request {
-  my $self = shift;
-  push @before_process_request, shift;
+  my $sub = shift;
+  push @before_process_request, $sub;
 }
 
 sub get {
@@ -86,13 +90,21 @@ sub request_handler {
 
   try {
     $req = Plack::Request->new($env);
-    $path = $req->path_info;
+    $path = $req->path_info || '/';
     $method = $req->method;
     @path_arr = map { ($_ ne '') || ($_ eq "0") ? "$_" : () } split '/', $path;
 
     # get traditional query vars. vars from path are appended later.
-    # might omit uploads. should probably check that out
     $queryvars = $method eq 'GET' ? $req->query_parameters : $req->body_parameters;
+
+    foreach my $key (keys %{$req->uploads}) {
+      if($queryvars->get($key)) {
+        push @{$$queryvars{$key}}, $req->upload($key)
+      }
+      else {
+        $queryvars->add($key, [ $req->upload($key) ])
+      }
+    }
 
     # loop through defined routes
     foreach my $route (@{$$routes{$method}}) {
@@ -156,14 +168,17 @@ sub res {
 
   if(ref($content)) {
     $content = to_json($content, { pretty => get_option('pretty_json') });
-    $contenttype = 'application/json' unless $contenttype
+    $contenttype = 'application/json ;charset='
+      . get_option('charset', get_section()) unless $contenttype
   }
 
   return [
     $status || 200,
     [ 'Content-type', ($contenttype || 'text/html; charset='
       . get_option('charset', get_section())) ],
-    [ encode_string($content, get_section()) ]
+    [ encode_string($content, get_option('charset', get_section())) ]
+    #[ $content ]
+    #[ decode_string($content, get_option('charset', get_section())) ]
   ]
 }
 
@@ -335,8 +350,8 @@ sub forbidden_unicode {
 }
 
 sub encode_string {
-  my ($str, $section) = @_;
-  return encode(get_option('charset', $section), $str, 0x0400);
+  my ($str, $charset) = @_;
+  return encode($charset, $str, 0x0400);
 }
 
 sub decode_string {
@@ -447,6 +462,26 @@ sub js_array {
 sub js_hash {
   my %hash = @_;
   return "{" . (join ",", map { "'$_':$hash{$_}" } keys %hash) . "}";
+}
+
+#
+# Crypto code
+#
+
+sub password_hash {
+  my ($password, $salt, $cost) = @_;
+
+  if($salt =~ m#\A\$2(a?)\$([0-9]{2})\$([./A-Za-z0-9]{22})#x) {
+    return bcrypt($password, $salt);
+  }
+  else {
+    my $salt = $salt || rand_bits(128);
+    my $cost = $cost || 10;
+    my $hash = bcrypt_hash(
+      { key_nul => 1, cost => $cost, salt => $salt }, $password);
+
+    return "\$2a\$$cost\$" . en_base64($salt) . en_base64($hash);
+  }
 }
 
 1;

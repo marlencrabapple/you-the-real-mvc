@@ -13,7 +13,13 @@ use FrameworkTest::ConfigDefault;
 # Routes
 #
 
+our $manapass = '$2a$10$2sSGbOusRZbGYc2tgZPrr.yJUURMjLFurK1mPivACsMNoQTK8LxDy';
+
 sub build {
+  before_process_request(sub{
+    print "asdf\n\n";
+  });
+
   get('/', sub {
     res(template('index')->(
       title => 'Just a test',
@@ -42,6 +48,11 @@ sub build {
 sub post_stuff {
   my ($params) = @_;
 
+  # check password
+  if((my $crypt = password_hash($$params{'berra'}, $manapass)) ne $manapass) {
+    make_error(get_option('s_wrongpass'));
+  }
+
   my $fileinfo = process_file($req->upload('file'), time());
   ($$fileinfo{tn_width}, $$fileinfo{tn_height}) = (get_thumbnail_dimensions($$fileinfo{width}, $$fileinfo{height}, 1));
 
@@ -58,7 +69,7 @@ sub post_stuff {
     get_option('thumb_dir') . $$fileinfo{thumb}, $$fileinfo{ext},
     $$fileinfo{tn_width}, $$fileinfo{tn_height}) if $$fileinfo{ext} =~ /webm|gif|jpg|jpeg|png/;
 
-  res({ fileinfo => $fileinfo });
+  res({ fileinfo => $fileinfo })
 }
 
 1;
