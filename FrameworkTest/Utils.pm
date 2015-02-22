@@ -119,22 +119,22 @@ sub analyze_webm {
 	$stdout = from_json($stdout) or return 1;
 
 	# check if file is legitimate
-	return (undef, undef, 1) if(!%$stdout); # empty json response from ffprobe
-	return (undef, undef, 1) unless($$stdout{format}->{format_name} eq 'matroska,webm'); # invalid format
-	return (undef, undef, 2) if(scalar @{$$stdout{streams}} > (get_option('webm_allow_audio') ? 2 : 1)); # too many streams
-	return (undef, undef, 1) if(!$$stdout{format} or $$stdout{format}->{duration} > get_option('webm_max_length'));
+	return (undef, undef, { warning => 1 }) if(!%$stdout); # empty json response from ffprobe
+	return (undef, undef, { warning => 1 }) unless($$stdout{format}->{format_name} eq 'matroska,webm'); # invalid format
+	return (undef, undef, { warning => 2 }) if(scalar @{$$stdout{streams}} > (get_option('webm_allow_audio') ? 2 : 1)); # too many streams
+	return (undef, undef, { warning => 3 }) if(!$$stdout{format} or $$stdout{format}->{duration} > get_option('webm_max_length'));
 
   foreach my $stream (@{$$stdout{streams}}) {
     if($$stream{codec_type} eq 'video') {
-      return (undef, undef, 1) if $$stream{codec_name} ne 'vp8';
-      return (undef, undef, 1) unless $$stream{width} and $$stream{height};
+      return (undef, undef, { warning => 1 }) if $$stream{codec_name} ne 'vp8';
+      return (undef, undef, { warning => 1 }) unless $$stream{width} and $$stream{height};
+      ($width, $height) = ($$stream{width}, $$stream{height})
     }
     elsif($$stream{codec_type} ne 'audio') {
-      return (undef, undef, 1)
+      return (undef, undef, { warning => 1 })
     }
   }
 
-	($width, $height) = (@{$$stdout{streams}}[0]->{width}, @{$$stdout{streams}}[0]->{height});
   return ($width, $height);
 }
 
@@ -152,8 +152,23 @@ sub make_thumbnail {
   }
   else {
     my $transparency = $ext =~ /\.(png|gif)$/ ? '-background transparent' : '-background white';
-    my $method = $ext eq '.gif' ? '-coalesce -sample' : '-resize';
-    `$convert $transparency '$file' $method ${tn_width}x${tn_height}! -quality $quality $thumb`;
+    my $method;
+
+    if($ext eq 'gif') {
+      if(get_option('animated_thumbnails')) {
+        $method = '-coalesce -sample';
+      }
+      else {
+        $file .= '[0]';
+      }
+    }
+    else {
+      $method = '-resize';
+    }
+
+    print $method, "\n";
+
+    `$convert $transparency $file $method ${tn_width}x${tn_height}! -quality $quality $thumb`;
 
     return 2 unless $?;
   }
@@ -194,14 +209,16 @@ sub process_file {
   open my $fh, "<", $file->path or make_error(get_option('s_upload_io') . ": $!");
   binmode $fh;
 
-  my ($ext, $width, $height, $warning) = analyze_image($file->path, $fh);
+  my ($ext, $width, $height, $other) = analyze_image($file->path, $fh);
 
-  if(($ext eq 'webm') && ($warning)) {
-    make_error(get_option('s_invalidwebm')) if $warning == 1;
-    make_error(get_option('s_webmaudio')) if $warning == 2;
+  # no reason why we can't throw these errors earlier...
+  if(($ext eq 'webm') && ($$other{warning})) {
+    make_error(get_option('s_invalidwebm')) if $$other{warning} == 1;
+    make_error(get_option('s_webmaudio')) if $$other{warning} == 2;
+    make_error(get_option('s_webmduration')) if $$other{warning} == 3;
   }
 
-  my $known = $width || get_option('filetypes')->{$ext};
+  my $known = ($width || get_option('filetypes')->{$ext}) ? 1 : 0;
 
   make_error(get_option('s_badformat')) unless(get_option('allow_unknown') or $known);
 	make_error(get_option('s_badformat')) if(grep { $_ eq $ext } @{get_option('forbidden_extensions')});
@@ -213,6 +230,11 @@ sub process_file {
   my $filebase = $time . sprintf("%03d", int(rand(1000)));
 	my $filename = "$filebase.$ext";
 	$filename .= get_option('munge_unknown') unless($known);
+
+  # check if a handler exists for a custom file type
+  if(ref(get_option('filetypes')->{$ext}) eq 'CODE') {
+    ($width, $height, $other) = get_option('filetypes')->{$ext}->($file, $filebase);
+  }
 
   # copy file, get md5, etc.
   my ($md5sum, $md5, $buffer) = @_;
@@ -241,7 +263,8 @@ sub process_file {
     ext => $ext,
     width => $width,
     height => $height,
-    md5 => $md5
+    md5 => $md5,
+    other => $other
   }
 }
 

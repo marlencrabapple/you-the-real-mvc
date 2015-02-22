@@ -151,6 +151,6 @@ add_option('s_locked', 'You cannot reply to a locked thread.'); # Thread is lock
 
 add_option('s_invalidwebm', 'Invalid or corrupt WebM file.');
 add_option('s_webmaudio', 'WebM files with audio are not allowed.');
-
+add_option('s_webmduration', 'WebM file is too long.');
 
 1;
