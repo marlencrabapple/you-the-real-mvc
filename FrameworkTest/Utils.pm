@@ -140,7 +140,7 @@ sub analyze_webm {
 
 sub make_thumbnail {
   my ($file, $thumb, $ext, $tn_width, $tn_height) = @_;
-  my $quality = 50;
+  my $quality = get_option('thumbnail_quality');
   my $convert = get_option('convert_path') || 'convert';
 
   if($ext eq 'webm') {

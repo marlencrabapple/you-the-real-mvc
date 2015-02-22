@@ -47,9 +47,6 @@ sub post_stuff {
   if($$fileinfo{other}->{tn_ext}) {
     $$fileinfo{tn_ext} = $$fileinfo{other}->{tn_ext}
   }
-  elsif(($$fileinfo{ext} eq 'gif') && (!get_option('animated_thumbnails'))) {
-    $$fileinfo{tn_ext} = 'jpg'
-  }
   else {
     $$fileinfo{tn_ext} = $$fileinfo{ext}
   }
