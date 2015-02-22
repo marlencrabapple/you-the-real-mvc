@@ -471,12 +471,16 @@ sub js_hash {
 sub password_hash {
   my ($password, $salt, $cost) = @_;
 
-  if($salt =~ m#\A\$2(a?)\$([0-9]{2})\$([./A-Za-z0-9]{22})#x) {
+  if($salt =~ m/\A\$2(a?)\$([0-9]{2})\$([.\/A-Za-z0-9]{22})/) {
     return bcrypt($password, $salt);
   }
   else {
-    my $salt = $salt || rand_bits(128);
-    my $cost = $cost || 10;
+    {
+      use bytes;
+      $salt = rand_bits(128) if((length($salt) != 16) || (!$salt));
+    }
+
+    $cost = ($cost && /^[0-9]+$/ && $cost > 4 && $cost < 31) || 10;
     my $hash = bcrypt_hash(
       { key_nul => 1, cost => $cost, salt => $salt }, $password);
 
