@@ -41,6 +41,19 @@ sub build {
     ));
   });
 
+  get('/derefer', sub {
+    my ($params, $req) = @_;
+
+    my $url = $$params{url};
+    my $url_regexp = url_regexp();
+
+    make_error(get_option('s_invalidurl')) unless ($url =~ /$url_regexp/sg);
+
+    res(template('dereferrer')->(
+      url => $url
+    ))
+  });
+
   get('/login', sub {
     res(template('index')->(
       title => 'Login',
@@ -108,13 +121,16 @@ sub post_stuff {
     # make thumbnail
     $$fileinfo{thumb} = $$fileinfo{filebase} . "s.$$fileinfo{tn_ext}";
 
-    make_thumbnail(get_option('img_dir') . $$fileinfo{filename},
-      get_option('thumb_dir') . $$fileinfo{thumb}, $$fileinfo{ext},
+    make_thumbnail(path_to('img_dir') . $$fileinfo{filename},
+      path_to('thumb_dir') . $$fileinfo{thumb}, $$fileinfo{ext},
       $$fileinfo{tn_width}, $$fileinfo{tn_height}) if $$fileinfo{ext} =~ /webm|gif|jpg|jpeg|png/;
 
     if($$fileinfo{other}->{has_tn}) {
       # do something
     }
+
+    $$fileinfo{thumb_url} = path_to('thumb_dir', 1) . $$fileinfo{thumb};
+    $$fileinfo{file_url} = path_to('img_dir', 1) . $$fileinfo{filename};
   }
   else {
     make_error(get_option('s_nopic'))

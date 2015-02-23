@@ -3,10 +3,10 @@
 <hr>
 
 <if $file>
-<a href="/<var get_option('img_dir_http', get_section())><!var $$file{filename}>" target="_blank"><var $$file{filename}></a><br>
+<a href="/<!var $$file{file_url}>" target="_blank"><var $$file{filename}></a><br>
 
-<a href="/<var get_option('img_dir_http', get_section())><!var $$file{filename}>" target="_blank">
-  <img src="/<var get_option('thumb_dir_http', get_section())><!var $$file{thumb}>" alt="<var $$file{filename}>" title="<var $$file{filename}>">
+<a href="/<!var $$file{file_url}>" target="_blank">
+  <img src="/<!var $$file{thumb_url}>" alt="<var $$file{filename}>" title="<var $$file{filename}>">
 </a>
 
 <pre>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title><var get_option('s_derefer_title')></title>
+<meta http-equiv="refresh" content="2; URL=<var $url>">
+<style type="text/css">
+  div {
+    font-family: sans-serif;
+    text-align: center;
+    font-weight: bold;
+    font-size: 36pt;
+    margin-top: 20%;
+  }
+</style>
+</head>
+<body>
+<div>
+  <var get_option('s_derefer_msg')><br>
+  <em><var $url></em>
+</div>
+</body>
+</html>

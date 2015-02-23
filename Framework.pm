@@ -2,7 +2,7 @@ package Framework;
 
 use strict;
 
-use base qw(Exporter); # exporting exporter doesn't work as expected...
+use parent 'Exporter'; # exporting exporter doesn't work as expected...
 use Framework::Base;
 use Framework::Defaults;
 
@@ -35,7 +35,7 @@ sub run {
     my $res = $self->request_handler($env);
     return $res;
 
-    # currently only for redirect(), but should probably be used for res() too
+    # currently used for everything but make_error()
     RES_OVERRIDE:
       $res = get_res();
       return $res;

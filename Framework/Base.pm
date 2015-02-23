@@ -14,6 +14,7 @@ use Plack::Request;
 use Plack::Response;
 use base qw(Exporter);
 use Encode qw(decode encode);
+use Hash::Merge::Simple qw(merge);
 use Data::Entropy::Algorithms qw(rand_bits);
 use Crypt::Eksblowfish::Bcrypt qw(bcrypt bcrypt_hash en_base64 de_base64);
 
@@ -30,11 +31,12 @@ our @EXPORT = (
   @Data::Dumper::EXPORT,
   @Plack::Request::EXPORT,
   @Plack::Response::EXPORT,
-  qw(encode decode Dumper get_option add_option set_section get_section),
+  qw(encode decode Dumper get_option add_option add_options set_section get_section),
   qw(before_process_request before_dispatch request_handler),
   qw(get post res redirect get_res set_res get_script_name),
   qw(make_error compile_template template add_template to_json from_json),
-  qw(password_hash)
+  qw(decode_string encode_string clean_string urlenc escamp),
+  qw(password_hash protocol_regexp url_regexp)
 );
 
 #
@@ -98,6 +100,8 @@ sub request_handler {
     $path = $req->path_info || '/';
     $method = $req->method;
     @path_arr = map { ($_ ne '') || ($_ eq "0") ? "$_" : () } split '/', $path;
+
+    print Dumper($path, \@path_arr);
 
     # get traditional query vars. vars from path are appended later.
     $queryvars = $method eq 'GET' ? $req->query_parameters : $req->body_parameters;
@@ -249,6 +253,12 @@ sub add_option {
   $$options{$section}->{$key} = $val;
 }
 
+sub add_options {
+  my ($options) = @_;
+  $Framework::Base::options = merge($Framework::Base::options, $options);
+  print Dumper($Framework::Base::options);
+}
+
 sub set_section {
   $section = shift;
 }
@@ -362,6 +372,17 @@ sub include {
 
   return $file;
 }
+
+#
+# HTML Utilities
+#
+
+my $protocol_re = qr{(?:http://|https://|ftp://|mailto:|news:|irc:)};
+my $url_re = qr{(${protocol_re}[^\s<>()"]*?(?:\([^\s<>()"]*?\)[^\s<>()"]*?)*)((?:\s|<|>|"|\.||\]|!|\?|,|&#44;|&quot;)*(?:[\s<>()"]|$))};
+
+sub protocol_regexp { return $protocol_re }
+
+sub url_regexp { return $url_re }
 
 #
 # Sanitation, serialization, etc.

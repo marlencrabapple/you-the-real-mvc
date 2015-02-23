@@ -6,7 +6,7 @@ use parent 'Exporter';
 use Framework;
 
 our @EXPORT = (
-  qw(analyze_image process_file get_thumbnail_dimensions make_thumbnail)
+  qw(analyze_image process_file get_thumbnail_dimensions make_thumbnail path_to)
 );
 
 #
@@ -245,8 +245,8 @@ sub process_file {
     # i guess this is where we would check for dupes
   }
 
-  open my $out_fh, ">>", get_option('img_dir') . $filename
-    or make_error(get_option('s_upload_io') . ": $!");
+  open my $out_fh, ">>", path_to('img_dir') . $filename
+    or make_error(get_option('s_upfail') . ": $!");
 
   binmode $out_fh;
   while(read($fh, $buffer, 1024)) {
@@ -254,6 +254,9 @@ sub process_file {
   }
   close $fh;
   close $out_fh;
+
+  # unlink temp file since it isn't happening automatically for whatever reaosn
+  unlink $file->path;
 
   return {
     filename => $filename,
@@ -264,6 +267,20 @@ sub process_file {
     md5 => $md5,
     other => $other
   }
+}
+
+#
+# Misc Utils
+#
+
+sub path_to {
+  my ($key, $http) = @_;
+  my $section = get_section();
+
+  print get_option($key, get_section()), "\n\n\n";
+
+  return ($http ? '' : './static/') . ($section ? "$section/" : '')
+    . get_option($key, get_section())
 }
 
 1;

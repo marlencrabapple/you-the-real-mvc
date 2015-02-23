@@ -1,3 +1,11 @@
 <part header>
-  <var $content>
+  <div>
+    <var $content>
+  </div>
+
+  <a href="<!var get_script_name()>/derefer?url=<!var urlenc('https://www.glauchan.org/glau/wakaba.pl?task=report&num=5015')>" target="_blank" rel="nofollow">Derefer Test 1</a><br>
+  <a href="<!var get_script_name()>/derefer?url=https://www.glauchan.org/glau/wakaba.pl?task=report&num=5015" target="_blank" rel="nofollow">Derefer Test 2</a><br>
+  <a href="<!var get_script_name()>/derefer?url=javascript:alert(\"hi\")" target="_blank" rel="nofollow">Derefer Test 3</a><br>
+  <a href="<!var get_script_name()>/derefer?url=javascript:alert(&quote;hi&quote;)" target="_blank" rel="nofollow">Derefer Test 4</a><br>
+  <a href="<!var get_script_name()>/derefer?url=javascript:alert('hi')" target="_blank" rel="nofollow">Derefer Test 5</a>
 <part footer>

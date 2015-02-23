@@ -138,7 +138,11 @@ add_option('s_baddelpass', 'Error: Incorrect password for deletion.');		# Return
 add_option('s_wrongpass', 'Error: Management password incorrect.');		# Returns error for wrong password (when trying to access Manager modes)
 add_option('s_virus', 'Error: Possible virus-infected file.');				# Returns error for malformed files suspected of being virus-infected.
 add_option('s_notwrite', 'Error: Could not write to directory.');				# Returns error when the script cannot write to the directory, the chmod (777) is wrong
-add_option('s_spam', 'Spammers are not welcome here.');					# Returns error when detecting spam
+add_option('s_spam', 'Spammers are not welcome here.');					# Returns error when detecting spam\
+
+add_option('s_invalidurl', 'Invalid URL.');
+add_option('s_derefer_title', "Redirecting...");
+add_option('s_derefer_msg', "Redirecting you to: ");
 
 add_option('s_sqlconf', 'SQL connection failure');							# Database connection failure
 add_option('s_sqlfail', 'Critical SQL problem!');							# SQL Failure
