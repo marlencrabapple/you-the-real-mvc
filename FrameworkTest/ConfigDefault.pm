@@ -47,7 +47,7 @@ my $videohandler = sub {
 	my ($ffprobe, $stdout, $width, $height, $tn_w, $tn_h, @keep);
 
   my $filepath = $file->path;
-  my $thumbpath = get_option('thumb_dir') . $filebase . "s.jpg";
+  my $thumbpath = FrameworkTest::path_to('thumb_dir') . $filebase . "s.jpg";
 
 	# get webm info
   $ffprobe = get_option('ffprobe_path') . ' -v quiet -print_format json -show_format '

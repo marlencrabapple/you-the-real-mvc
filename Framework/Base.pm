@@ -101,8 +101,6 @@ sub request_handler {
     $method = $req->method;
     @path_arr = map { ($_ ne '') || ($_ eq "0") ? "$_" : () } split '/', $path;
 
-    print Dumper($path, \@path_arr);
-
     # get traditional query vars. vars from path are appended later.
     $queryvars = $method eq 'GET' ? $req->query_parameters : $req->body_parameters;
 
@@ -256,7 +254,6 @@ sub add_option {
 sub add_options {
   my ($options) = @_;
   $Framework::Base::options = merge($Framework::Base::options, $options);
-  print Dumper($Framework::Base::options);
 }
 
 sub set_section {
