@@ -105,32 +105,15 @@ sub post_stuff {
 
   if($file) {
     $fileinfo = process_file($file, time());
-    ($$fileinfo{tn_width}, $$fileinfo{tn_height}) = (get_thumbnail_dimensions($$fileinfo{width}, $$fileinfo{height}, 1));
 
-    # get proper thumbnail extension
-    if($$fileinfo{other}->{tn_ext}) {
-      $$fileinfo{tn_ext} = $$fileinfo{other}->{tn_ext}
-    }
-    elsif($$fileinfo{ext} eq 'webm') {
-      $$fileinfo{tn_ext} = 'jpg'
+    if($$fileinfo{width}) {
+      ($$fileinfo{tn_width}, $$fileinfo{tn_height}) = (get_thumbnail_dimensions($$fileinfo{width}, $$fileinfo{height}, 1));
     }
     else {
-      $$fileinfo{tn_ext} = $$fileinfo{ext}
+
     }
 
-    # make thumbnail
-    $$fileinfo{thumb} = $$fileinfo{filebase} . "s.$$fileinfo{tn_ext}";
 
-    make_thumbnail(path_to('img_dir') . $$fileinfo{filename},
-      path_to('thumb_dir') . $$fileinfo{thumb}, $$fileinfo{ext},
-      $$fileinfo{tn_width}, $$fileinfo{tn_height}) if $$fileinfo{ext} =~ /webm|gif|jpg|jpeg|png/;
-
-    if($$fileinfo{other}->{has_tn}) {
-      # do something
-    }
-
-    $$fileinfo{thumb_url} = path_to('thumb_dir', 1) . $$fileinfo{thumb};
-    $$fileinfo{file_url} = path_to('img_dir', 1) . $$fileinfo{filename};
   }
   else {
     make_error(get_option('s_nopic'))

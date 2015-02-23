@@ -230,8 +230,12 @@ sub process_file {
 	$filename .= get_option('munge_unknown') unless($known);
 
   # check if a handler exists for a custom file type
-  if(ref(get_option('filetypes')->{$ext}) eq 'CODE') {
+  if(ref(get_option('filetypes', get_section())->{$ext}) eq 'CODE') {
+    # maybe it would be better to return a handler and deal with it later?
     ($width, $height, $other) = get_option('filetypes')->{$ext}->($file, $filebase);
+  }
+  elsif(get_option('filetypes', get_section())->{$ext}) {
+    # kareha and wakaba restore the name, not sure what we'll do
   }
 
   # copy file, get md5, etc.

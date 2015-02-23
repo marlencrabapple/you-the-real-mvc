@@ -58,17 +58,17 @@ my $videohandler = sub {
 
 	# check if file is legitimate
 	make_error(get_option('s_upfail')) if(!%$stdout); # empty json response from ffprobe
-	#return (undef, undef, { warning => 2 }) if(scalar @{$$stdout{streams}} > 2); # too many streams
+	#make_error(get_option('s_badformat')) if(scalar @{$$stdout{streams}} > 2); # too many streams
 
   foreach my $stream (@{$$stdout{streams}}) {
     if($$stream{codec_type} eq 'video') {
       make_error(get_option('s_badformat')) unless $$stream{width} and $$stream{height};
       ($width, $height) = ($$stream{width}, $$stream{height});
 
-      push @keep, "-map 0:$$stream{index}"
+      #push @keep, "-map 0:$$stream{index}"
     }
     elsif($$stream{codec_type} eq 'audio') {
-      push @keep, "-map 0:$$stream{index}"
+      #push @keep, "-map 0:$$stream{index}"
     }
   }
 
