@@ -286,7 +286,13 @@ sub add_strings {
 
 sub get_string {
   my ($key, $vars, $section) = @_;
-  $$strings{$key}->($vars) if ref $$strings{$key} eq 'CODE';
+
+  if(ref($$strings{$key}) eq 'CODE') {
+    return $$strings{$key}->($vars)
+  }
+  else {
+    return $$strings{$key};
+  }
 }
 
 #
