@@ -237,6 +237,10 @@ sub get_script_name {
 # Config Utils
 #
 
+sub option {
+
+}
+
 sub get_option {
   my ($key, $section) = @_;
 
@@ -262,6 +266,27 @@ sub set_section {
 
 sub get_section {
   return $section;
+}
+
+#
+# String Utils ()
+#
+
+sub string {
+
+}
+
+sub add_string {
+
+}
+
+sub add_strings {
+
+}
+
+sub get_string {
+  my ($key, $vars, $section) = @_;
+  $$strings{$key}->($vars) if ref $$strings{$key} eq 'CODE';
 }
 
 #

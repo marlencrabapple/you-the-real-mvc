@@ -26,7 +26,7 @@ sub build {
     if(@{$patharr}[0] eq 'admin') {
       if((my $crypt = password_hash($$params{berra}, get_option('mana_pass'))) ne get_option('mana_pass')) {
         #make_error(get_option('s_wrongpass'));
-        redirect(get_script_name() . '/login');
+        redirect(get_script_name() . '/login?notice=1');
       }
       else {
         $session = { crypt => $crypt };
@@ -55,9 +55,13 @@ sub build {
   });
 
   get('/login', sub {
+    my ($params) = @_:
+    my $msg = get_string($$params{notice});
+
     res(template('index')->(
       title => 'Login',
-      content => 'Login faget'
+      content => 'Login faget'.
+      msg => $msg
     ))
   });
 
