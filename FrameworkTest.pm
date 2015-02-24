@@ -64,7 +64,7 @@ sub build {
   });
 
   get('/login', sub {
-    my ($params) = @_:
+    my ($params) = @_;
     my $msg = get_string($$params{notice});
 
     res(template('index')->(
@@ -123,7 +123,7 @@ sub post_stuff {
       ($$fileinfo{tn_width}, $$fileinfo{tn_height}) = (get_thumbnail_dimensions($$fileinfo{width}, $$fileinfo{height}, 1));
       $$fileinfo{thumb} = $$fileinfo{filebase} . "s.$$fileinfo{tn_ext}";
 
-      if($$filename{other}->{has_tn}) {
+      if($$fileinfo{other}->{has_tn}) {
         $$fileinfo{tn_ext} = $$fileinfo{other}->{tn_ext}
       }
       else {
@@ -142,8 +142,8 @@ sub post_stuff {
       $$fileinfo{thumb_url} = path_to('thumb_dir', 1) . $$fileinfo{thumb};
       $$fileinfo{file_url} = path_to('img_dir', 1) . $$fileinfo{filename};
     }
-    elsif() {
-
+    else {
+      # icon
     }
   }
   else {

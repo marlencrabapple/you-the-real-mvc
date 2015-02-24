@@ -20,6 +20,7 @@ use Crypt::Eksblowfish::Bcrypt qw(bcrypt bcrypt_hash en_base64 de_base64);
 
 our ($self, $env, $req, $section, $res, $templates, @before_process_request, @before_dispatch);
 our $options = { global => {} };
+our $strings = { global => {} };
 
 our $routes = {
   GET => [],
@@ -218,7 +219,7 @@ sub make_error {
   my ($content, $status, $contenttype) = @_;
   my $res;
 
-  if((is_ajax()) && (!$contenttype)) || (ref($content))) {
+  if(((is_ajax()) && (!$contenttype)) || (ref($content))) {
     $res = { error => $content }
   }
   else {
