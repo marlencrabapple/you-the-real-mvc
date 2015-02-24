@@ -242,7 +242,15 @@ sub is_ajax {
 #
 
 sub option {
+  my ($key, $value, $section) = @_;
+  $section = $section ? $section : get_section();
 
+  if($value) {
+    set_option($key, $value, $section);
+  }
+  else {
+    return get_option($key, $section);
+  }
 }
 
 sub get_option {

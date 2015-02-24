@@ -17,7 +17,7 @@ our $session = {};
 
 sub build {
   before_process_request(sub{
-
+    # not much info available here so who knows what we can do
   });
 
   before_dispatch(sub{
