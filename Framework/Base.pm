@@ -32,8 +32,9 @@ our @EXPORT = (
   @Data::Dumper::EXPORT,
   @Plack::Request::EXPORT,
   @Plack::Response::EXPORT,
-  qw(encode decode Dumper get_option add_option add_options set_section get_section),
-  qw(before_process_request before_dispatch request_handler),
+  qw(encode decode Dumper),
+  qw(get_option add_option add_options option add_string add_strings get_string string),
+  qw(before_process_request before_dispatch request_handler set_section get_section),
   qw(get post res redirect get_res set_res is_ajax get_script_name),
   qw(make_error compile_template template add_template to_json from_json),
   qw(decode_string encode_string clean_string urlenc escamp),
@@ -199,7 +200,7 @@ sub res {
 
   set_res($res->finalize);
 
-  return $res if $return;
+  return $Framework::Base::res if $return;
   goto RES_OVERRIDE;
 }
 
@@ -217,7 +218,6 @@ sub redirect {
 
 sub make_error {
   my ($content, $status, $contenttype) = @_;
-  my $res;
 
   if(((is_ajax()) && (!$contenttype)) || (ref($content))) {
     $res = { error => $content }
@@ -226,9 +226,7 @@ sub make_error {
     $res = template('error')->(error => $content)
   }
 
-  set_res(
-    res($res, $contenttype, ($status || 500), 1)
-  );
+  set_res(res($res, $contenttype, ($status || 500), 1));
 
   die $_, $content;
 }
@@ -247,10 +245,10 @@ sub option {
   $section = $section ? $section : get_section();
 
   if($value) {
-    set_option($key, $value, $section);
+    set_option($key, $value, $section)
   }
   else {
-    return get_option($key, $section);
+    return get_option($key, $section)
   }
 }
 
@@ -258,27 +256,27 @@ sub get_option {
   my ($key, $section) = @_;
 
   $section = $section ? $section : 'global';
-  return $$options{$section}->{$key} || $$options{'global'}->{$key};
+  return $$options{$section}->{$key} || $$options{'global'}->{$key}
 }
 
 sub add_option {
-  my ($key, $val, $section) = @_;
+  my ($key, $value, $section) = @_;
 
   $section = $section ? $section : 'global';
-  $$options{$section}->{$key} = $val;
+  $$options{$section}->{$key} = $value
 }
 
 sub add_options {
   my ($options) = @_;
-  $Framework::Base::options = merge($Framework::Base::options, $options);
+  $Framework::Base::options = merge($Framework::Base::options, $options)
 }
 
 sub set_section {
-  $section = shift;
+  $section = shift
 }
 
 sub get_section {
-  return $section;
+  return $section
 }
 
 #
@@ -286,26 +284,28 @@ sub get_section {
 #
 
 sub string {
-
-}
-
-sub add_string {
-
-}
-
-sub add_strings {
-
+  get_string(@_)
 }
 
 sub get_string {
-  my ($key, $vars, $section) = @_;
+  my ($key, $vars) = @_;
 
   if(ref($$strings{$key}) eq 'CODE') {
     return $$strings{$key}->($vars)
   }
   else {
-    return $$strings{$key};
+    return $$strings{$key}
   }
+}
+
+sub add_string {
+  my ($key, $value) = @_;
+  $$strings{$key} = $value
+}
+
+sub add_strings {
+  my ($strings) = @_;
+  $Framework::Base::strings = merge($Framework::Base::strings, $strings)
 }
 
 #

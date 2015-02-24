@@ -4,8 +4,8 @@ use strict;
 
 use Framework;
 
-add_option('debug_mode', 1);
-add_option('minify', 1);
+add_option('debug_mode', 0);
+add_option('minify', 0);
 
 add_option('static_dir', './static');
 add_option('template_dir', './templates');

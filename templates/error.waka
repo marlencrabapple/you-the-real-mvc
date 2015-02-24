@@ -1,0 +1,6 @@
+<part header>
+  <div class="error">
+    <h1><var string('s_error')></h1>
+    <h2><var $error></h2>
+  </div>
+<part footer>

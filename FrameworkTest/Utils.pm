@@ -6,7 +6,7 @@ use parent 'Exporter';
 use Framework;
 
 our @EXPORT = (
-  qw(analyze_image process_file get_thumbnail_dimensions make_thumbnail path_to)
+  qw(analyze_image process_file get_thumbnail_dimensions make_thumbnail check_ban path_to)
 );
 
 #
@@ -30,12 +30,12 @@ sub analyze_image {
 
 	safety_check($file);
 
-	return ("jpg", @res) if(@res = analyze_jpeg($handle));
-	return ("png", @res) if(@res = analyze_png($handle));
-	return ("gif", @res) if(@res = analyze_gif($handle));
+	return ('jpg', @res) if(@res = analyze_jpeg($handle));
+	return ('png', @res) if(@res = analyze_png($handle));
+	return ('gif', @res) if(@res = analyze_gif($handle));
 
 	if(get_option('allow_webm')) {
-		return ("webm", @res) if(@res = analyze_webm($file));
+		return ('webm', @res) if(@res = analyze_webm($file));
 	}
 
 	# find file extension for unknown files
@@ -49,7 +49,7 @@ sub safety_check {
 	# Check for IE MIME sniffing XSS exploit - thanks, MS, totally appreciating this
 	read $file, my $buffer, 256;
 	seek $file, 0, 0;
-	die "Possible IE XSS exploit in file" if $buffer =~ /<(?:body|head|html|img|plaintext|pre|script|table|title|a href|channel|scriptlet)/;
+	die 'Possible IE XSS exploit in file' if $buffer =~ /<(?:body|head|html|img|plaintext|pre|script|table|title|a href|channel|scriptlet)/;
 }
 
 sub analyze_jpeg {
@@ -69,7 +69,7 @@ sub analyze_jpeg {
 			last unless(read($file, $buffer, 3) == 3);
 			my ($mark, $size) = unpack("Cn", $buffer);
 			last if($mark == 0xda or $mark == 0xd9); # SOS/EOI
-			die "Possible virus in image" if($size < 2); # MS GDI+ JPEG exploit uses short chunks
+			die 'Possible virus in image' if($size < 2); # MS GDI+ JPEG exploit uses short chunks
 
       # SOF0..SOF2 - what the hell are the rest?
 			if($mark >= 0xc0 and $mark <= 0xc2) {
@@ -288,14 +288,6 @@ sub process_file {
 # Misc Utils
 #
 
-sub path_to {
-  my ($key, $http) = @_;
-  my $section = get_section();
 
-  print get_option($key, get_section()), "\n\n\n";
-
-  return ($http ? '' : './static/') . ($section ? "$section/" : '')
-    . get_option($key, get_section())
-}
 
 1;
