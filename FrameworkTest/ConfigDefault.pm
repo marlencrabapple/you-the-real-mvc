@@ -22,13 +22,13 @@ add_option('img_dir', 'src/');
 add_option('thumb_dir', 'thumb/');
 add_option('res_dir', 'res/');
 
-add_option('max_kb', 10000);
+add_option('max_kb', 4 * 1024);
 add_option('max_image_width', 10000);
 add_option('max_image_height', 10000);
 add_option('max_image_pixels', 10000 * 10000);
 
-add_option('tn_max_width', 150);
-add_option('tn_max_height', 150);
+add_option('tn_max_width', 125);
+add_option('tn_max_height', 125);
 add_option('tn_max_width_op', 250);
 add_option('tn_max_height_op', 250);
 add_option('animated_thumbnails', 1);
@@ -38,7 +38,7 @@ add_option('thumbnail_quality', 70);
 add_option('allow_webm', 1);
 add_option('ffmpeg_path', 'ffmpeg');
 add_option('ffprobe_path', 'ffprobe');
-add_option('webm_max_length', 120);
+add_option('webm_max_length', 300);
 add_option('webm_allow_audio', 1);
 
 add_option('forbidden_extensions', []);
