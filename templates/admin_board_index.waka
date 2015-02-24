@@ -23,7 +23,7 @@
 
 <loop $threads>
 
-}. THREAD_TEMPLATE_PART .q{
+<part thread>
 
 <hr>
 </loop>
