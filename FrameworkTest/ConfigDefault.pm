@@ -4,44 +4,53 @@ use strict;
 
 use Framework;
 
-add_option('debug_mode', 0);
-add_option('minify', 0);
+add_options({
+  site_name => 'Glaukaba',
+  board_name => 'Glaukaba Image Board',
+  subtitle => 'Nothing to see here',
 
-add_option('static_dir', './static');
-add_option('template_dir', './templates');
+  sql_ban_table => 'bans',
+  sql_user_table => 'users',
+  sql_report_table => 'reports',
+  sql_pass_table => 'pass',
 
-add_option('sql_ban_table', 'bans');
-add_option('sql_user_table', 'users');
-add_option('sql_report_table', 'reports');
-add_option('sql_pass_table', 'pass');
+  max_threads_index => 15,
+  max_replies_index => 5,
+  max_replies_thread => 300,
+  max_images_thread => 150,
 
-add_option('max_threads_index', 15);
-add_option('max_replies_index', 5);
+  img_dir => 'src/',
+  thumb_dir => 'thumb/',
+  res_dir => 'res/',
 
-add_option('img_dir', 'src/');
-add_option('thumb_dir', 'thumb/');
-add_option('res_dir', 'res/');
+  max_kb => 4 * 1024,
+  max_image_width => 10000,
+  max_image_height => 10000,
+  max_image_pixels => 10000 * 10000,
 
-add_option('max_kb', 4 * 1024);
-add_option('max_image_width', 10000);
-add_option('max_image_height', 10000);
-add_option('max_image_pixels', 10000 * 10000);
+  tn_max_width => 125,
+  tn_max_height => 125,
+  tn_max_width_op => 250,
+  tn_max_height_op => 250,
+  animated_thumbnails => 1,
+  convert_path => 'gm convert',
+  thumbnail_quality => 70,
 
-add_option('tn_max_width', 125);
-add_option('tn_max_height', 125);
-add_option('tn_max_width_op', 250);
-add_option('tn_max_height_op', 250);
-add_option('animated_thumbnails', 1);
-add_option('convert_path', 'gm convert');
-add_option('thumbnail_quality', 70);
+  allow_webm => 1,
+  ffmpeg_path => 'ffmpeg',
+  ffprobe_path => 'ffprobe',
+  webm_max_length => 300,
+  webm_allow_audio => 1,
 
-add_option('allow_webm', 1);
-add_option('ffmpeg_path', 'ffmpeg');
-add_option('ffprobe_path', 'ffprobe');
-add_option('webm_max_length', 300);
-add_option('webm_allow_audio', 1);
+  forbidden_extensions => ['php', 'php3' ,'php4', 'phtml', 'shtml', 'cgi', 'pl',
+    'pm', 'py', 'r', 'exe', 'dll', 'scr', 'pif', 'asp', 'cfm', 'jsp', 'vbs'],
+  munge_unknown => '.unknown',
+  allow_unknown => 0,
 
-add_option('forbidden_extensions', []);
-add_option('munge_unknown', '.unknown');
+  debug_mode => 0,
+  minify => 0,
+  static_dir => './static',
+  template_dir => './templates'
+});
 
 1;
