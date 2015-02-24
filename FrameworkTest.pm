@@ -23,6 +23,15 @@ sub build {
   before_dispatch(sub{
     my ($env, $req, $params, $pathstr, $patharr) = @_;
 
+    # check if user is banned before they can do anything
+    if(my $ban = check_ban($req)) {
+      if(is_ajax()) {
+        res($ban)
+      }
+
+      res(template('banned')->(%{$ban}))
+    }
+
     if(@{$patharr}[0] eq 'admin') {
       if((my $crypt = password_hash($$params{berra}, get_option('mana_pass'))) ne get_option('mana_pass')) {
         #make_error(get_option('s_wrongpass'));

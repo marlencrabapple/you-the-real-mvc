@@ -10,6 +10,17 @@ our @EXPORT = (
 );
 
 #
+# Admin Utilities
+#
+
+sub check_ban {
+  my ($req) = @_;
+
+  # get ip from $req, check if banned, and return ban details
+  return 0;
+}
+
+#
 # Image Utilities
 #
 

@@ -33,7 +33,7 @@ our @EXPORT = (
   @Plack::Response::EXPORT,
   qw(encode decode Dumper get_option add_option add_options set_section get_section),
   qw(before_process_request before_dispatch request_handler),
-  qw(get post res redirect get_res set_res get_script_name),
+  qw(get post res redirect get_res set_res is_ajax get_script_name),
   qw(make_error compile_template template add_template to_json from_json),
   qw(decode_string encode_string clean_string urlenc escamp),
   qw(password_hash protocol_regexp url_regexp)
@@ -189,12 +189,15 @@ sub res {
   }
 
   my $res = $req->new_response($status || 200);
+
   $res->content_type($contenttype || ('text/html; charset='
     . get_option('charset', get_section())));
+
   $res->body(encode_string($content, get_option('charset', get_section())));
   $res->content_encoding('gzip') if get_option('gzip', get_section());
 
   set_res($res->finalize);
+
   return $res if $return;
   goto RES_OVERRIDE;
 }
@@ -215,7 +218,7 @@ sub make_error {
   my ($content, $status, $contenttype) = @_;
   my $res;
 
-  if((($req->header('HTTP_X_REQUESTED_WITH') =~ /xmlhttprequest/i) && (!$contenttype)) || (ref($content))) {
+  if((is_ajax()) && (!$contenttype)) || (ref($content))) {
     $res = { error => $content }
   }
   else {
@@ -229,8 +232,9 @@ sub make_error {
   die $_, $content;
 }
 
-sub get_script_name {
-  return $$env{SCRIPT_NAME}
+sub is_ajax {
+  return 1 if $req->header('HTTP_X_REQUESTED_WITH') =~ /xmlhttprequest/i;
+  return 0;
 }
 
 #
@@ -269,7 +273,7 @@ sub get_section {
 }
 
 #
-# String Utils ()
+# String Utils
 #
 
 sub string {
@@ -570,6 +574,14 @@ sub password_hash {
 
     return "\$2a\$$cost\$" . en_base64($salt) . en_base64($hash);
   }
+}
+
+#
+# Misc
+#
+
+sub get_script_name {
+  return $$env{SCRIPT_NAME}
 }
 
 1;
