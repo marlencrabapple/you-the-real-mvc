@@ -26,114 +26,114 @@ sub check_ban {
 
 sub analyze_image {
   my ($file, $handle) = @_;
-	my (@res);
+  my (@res);
 
-	safety_check($file);
+  safety_check($file);
 
-	return ('jpg', @res) if(@res = analyze_jpeg($handle));
-	return ('png', @res) if(@res = analyze_png($handle));
-	return ('gif', @res) if(@res = analyze_gif($handle));
+  return ('jpg', @res) if(@res = analyze_jpeg($handle));
+  return ('png', @res) if(@res = analyze_png($handle));
+  return ('gif', @res) if(@res = analyze_gif($handle));
 
-	if(get_option('allow_webm')) {
-		return ('webm', @res) if(@res = analyze_webm($file));
-	}
+  if(get_option('allow_webm')) {
+    return ('webm', @res) if(@res = analyze_webm($file));
+  }
 
-	# find file extension for unknown files
-	my ($ext) = $file =~ /\.([^\.]+)$/;
-	return (lc($ext), 0, 0);
+  # find file extension for unknown files
+  my ($ext) = $file =~ /\.([^\.]+)$/;
+  return (lc($ext), 0, 0);
 }
 
 sub safety_check {
-	my ($file) = @_;
+  my ($file) = @_;
 
-	# Check for IE MIME sniffing XSS exploit - thanks, MS, totally appreciating this
-	read $file, my $buffer, 256;
-	seek $file, 0, 0;
-	die 'Possible IE XSS exploit in file' if $buffer =~ /<(?:body|head|html|img|plaintext|pre|script|table|title|a href|channel|scriptlet)/;
+  # Check for IE MIME sniffing XSS exploit - thanks, MS, totally appreciating this
+  read $file, my $buffer, 256;
+  seek $file, 0, 0;
+  die 'Possible IE XSS exploit in file' if $buffer =~ /<(?:body|head|html|img|plaintext|pre|script|table|title|a href|channel|scriptlet)/;
 }
 
 sub analyze_jpeg {
-	my ($file) = @_;
-	my ($buffer);
+  my ($file) = @_;
+  my ($buffer);
 
-	read($file, $buffer, 2) or die $!;
+  read($file, $buffer, 2) or die $!;
 
-	if($buffer eq "\xff\xd8") {
-		OUTER:
-		for(;;) {
-			for(;;) {
-				last OUTER unless(read($file, $buffer, 1));
-				last if($buffer eq "\xff");
-			}
+  if($buffer eq "\xff\xd8") {
+    OUTER:
+    for(;;) {
+      for(;;) {
+        last OUTER unless(read($file, $buffer, 1));
+        last if($buffer eq "\xff");
+      }
 
-			last unless(read($file, $buffer, 3) == 3);
-			my ($mark, $size) = unpack("Cn", $buffer);
-			last if($mark == 0xda or $mark == 0xd9); # SOS/EOI
-			die 'Possible virus in image' if($size < 2); # MS GDI+ JPEG exploit uses short chunks
+      last unless(read($file, $buffer, 3) == 3);
+      my ($mark, $size) = unpack("Cn", $buffer);
+      last if($mark == 0xda or $mark == 0xd9); # SOS/EOI
+      die 'Possible virus in image' if($size < 2); # MS GDI+ JPEG exploit uses short chunks
 
       # SOF0..SOF2 - what the hell are the rest?
-			if($mark >= 0xc0 and $mark <= 0xc2) {
-				last unless(read($file, $buffer, 5) == 5);
+      if($mark >= 0xc0 and $mark <= 0xc2) {
+        last unless(read($file, $buffer, 5) == 5);
 
-				my ($bits, $height, $width) = unpack("Cnn", $buffer);
-				seek($file, 0, 0);
+        my ($bits, $height, $width) = unpack("Cnn", $buffer);
+        seek($file, 0, 0);
 
-				return($width, $height);
-			}
+        return($width, $height);
+      }
 
-			seek($file ,$size - 2, 1);
-		}
-	}
+      seek($file ,$size - 2, 1);
+    }
+  }
 
-	seek($file, 0, 0);
-	return ();
+  seek($file, 0, 0);
+  return ();
 }
 
 sub analyze_png {
-	my ($file) = @_;
-	my ($bytes, $buffer);
+  my ($file) = @_;
+  my ($bytes, $buffer);
 
-	$bytes = read($file, $buffer, 24);
-	seek($file, 0, 0);
-	return () unless($bytes == 24);
+  $bytes = read($file, $buffer, 24);
+  seek($file, 0, 0);
+  return () unless($bytes == 24);
 
-	my ($magic1, $magic2, $length, $ihdr, $width, $height) = unpack("NNNNNN", $buffer);
+  my ($magic1, $magic2, $length, $ihdr, $width, $height) = unpack("NNNNNN", $buffer);
 
-	return () unless($magic1 == 0x89504e47 and $magic2 == 0x0d0a1a0a and $ihdr == 0x49484452);
-	return ($width, $height);
+  return () unless($magic1 == 0x89504e47 and $magic2 == 0x0d0a1a0a and $ihdr == 0x49484452);
+  return ($width, $height);
 }
 
 sub analyze_gif {
-	my ($file) = @_;
-	my ($bytes, $buffer);
+  my ($file) = @_;
+  my ($bytes, $buffer);
 
-	$bytes = read($file, $buffer, 10);
-	seek($file, 0, 0);
-	return () unless($bytes == 10);
+  $bytes = read($file, $buffer, 10);
+  seek($file, 0, 0);
+  return () unless($bytes == 10);
 
-	my ($magic, $width, $height) = unpack("A6 vv", $buffer);
+  my ($magic, $width, $height) = unpack("A6 vv", $buffer);
 
-	return () unless($magic eq "GIF87a" or $magic eq "GIF89a");
-	return ($width, $height);
+  return () unless($magic eq "GIF87a" or $magic eq "GIF89a");
+  return ($width, $height);
 }
 
 sub analyze_webm {
-	my ($file) = @_;
-	my ($ffprobe, $stdout, $width, $height);
+  my ($file) = @_;
+  my ($ffprobe, $stdout, $width, $height);
 
   my ($filename, $ext) = split('\.', $file);
   return () unless $ext eq 'webm';
 
-	# get webm info
+  # get webm info
   $ffprobe = get_option('ffprobe_path');
-	$stdout = `$ffprobe -v quiet -print_format json -show_format -show_streams $file`;
-	$stdout = from_json($stdout) or return 1;
+  $stdout = `$ffprobe -v quiet -print_format json -show_format -show_streams $file`;
+  $stdout = from_json($stdout) or return 1;
 
-	# check if file is legitimate
-	return (undef, undef, { warning => 1 }) if(!%$stdout); # empty json response from ffprobe
-	return (undef, undef, { warning => 1 }) unless($$stdout{format}->{format_name} eq 'matroska,webm'); # invalid format
-	return (undef, undef, { warning => 2 }) if(scalar @{$$stdout{streams}} > (get_option('webm_allow_audio') ? 2 : 1)); # too many streams
-	return (undef, undef, { warning => 3 }) if(!$$stdout{format} or $$stdout{format}->{duration} > get_option('webm_max_length'));
+  # check if file is legitimate
+  return (undef, undef, { warning => 1 }) if(!%$stdout); # empty json response from ffprobe
+  return (undef, undef, { warning => 1 }) unless($$stdout{format}->{format_name} eq 'matroska,webm'); # invalid format
+  return (undef, undef, { warning => 2 }) if(scalar @{$$stdout{streams}} > (get_option('webm_allow_audio') ? 2 : 1)); # too many streams
+  return (undef, undef, { warning => 3 }) if(!$$stdout{format} or $$stdout{format}->{duration} > get_option('webm_max_length'));
 
   foreach my $stream (@{$$stdout{streams}}) {
     if($$stream{codec_type} eq 'video') {
@@ -155,11 +155,11 @@ sub make_thumbnail {
   my $convert = get_option('convert_path') || 'convert';
 
   if($ext eq 'webm') {
-	  my $ffmpeg = get_option('ffmpeg_path');
+    my $ffmpeg = get_option('ffmpeg_path');
 
     $thumb =~ s/webm/jpg/i;
-	  `$ffmpeg -i $file -v quiet -ss 00:00:00 -an -vframes 1 -f mjpeg -vf scale=$tn_width:$tn_height $thumb 2>&1`;
-	  return 1 unless $?;
+    `$ffmpeg -i $file -v quiet -ss 00:00:00 -an -vframes 1 -f mjpeg -vf scale=$tn_width:$tn_height $thumb 2>&1`;
+    return 1 unless $?;
   }
   else {
     my $transparency = ($ext =~ /^(png|gif)$/) ? '-background transparent' : '-background white';
@@ -185,26 +185,26 @@ sub make_thumbnail {
 
 sub get_thumbnail_dimensions {
   my ($width, $height, $op) = @_;
-	my ($tn_width, $tn_height, $max_w, $max_h);
+  my ($tn_width, $tn_height, $max_w, $max_h);
 
   $max_w = $op ? get_option('tn_max_width_op') : get_option('tn_max_width');
   $max_h = $op ? get_option('tn_max_height_op') : get_option('tn_max_height');
 
-	if($width <= $max_w and $height <= $max_h) {
-		$tn_width = $width;
-		$tn_height = $height;
-	}
-	else {
-		$tn_width = $max_w;
-		$tn_height = int(($height * ($max_w)) / $width);
+  if($width <= $max_w and $height <= $max_h) {
+    $tn_width = $width;
+    $tn_height = $height;
+  }
+  else {
+    $tn_width = $max_w;
+    $tn_height = int(($height * ($max_w)) / $width);
 
-		if($tn_height > $max_h) {
-			$tn_width = int(($width * ($max_h)) / $height);
-			$tn_height = $max_h;
-		}
-	}
+    if($tn_height > $max_h) {
+      $tn_width = int(($width * ($max_h)) / $height);
+      $tn_height = $max_h;
+    }
+  }
 
-	return ($tn_width, $tn_height)
+  return ($tn_width, $tn_height)
 }
 
 sub process_file {
@@ -230,15 +230,15 @@ sub process_file {
   my $known = ($width || get_option('filetypes')->{$ext}) ? 1 : 0;
 
   make_error(string('s_badformat')) unless(get_option('allow_unknown') or $known);
-	make_error(string('s_badformat')) if(grep { $_ eq $ext } @{get_option('forbidden_extensions')});
-	make_error(string('s_toobig')) if(get_option('max_image_width') and $width > get_option('max_image_width'));
-	make_error(string('s_toobig')) if(get_option('max_image_height') and $height > get_option('max_image_height'));
-	make_error(string('s_toobig')) if(get_option('max_image_pixels') and ($width * $height) > get_option('max_image_pixels'));
+  make_error(string('s_badformat')) if(grep { $_ eq $ext } @{get_option('forbidden_extensions')});
+  make_error(string('s_toobig')) if(get_option('max_image_width') and $width > get_option('max_image_width'));
+  make_error(string('s_toobig')) if(get_option('max_image_height') and $height > get_option('max_image_height'));
+  make_error(string('s_toobig')) if(get_option('max_image_pixels') and ($width * $height) > get_option('max_image_pixels'));
 
   # generate random filename - fudges the microseconds
   my $filebase = $time . sprintf("%03d", int(rand(1000)));
-	my $filename = "$filebase.$ext";
-	$filename .= get_option('munge_unknown') unless($known);
+  my $filename = "$filebase.$ext";
+  $filename .= get_option('munge_unknown') unless($known);
 
   # check if a handler exists for a custom file type
   if(ref(get_option('filetypes', get_section())->{$ext}) eq 'CODE') {
@@ -254,7 +254,7 @@ sub process_file {
 
   $md5sum = 'md5sum ' . $file->path;
   $md5 = `$md5sum`;
-	($md5) = $md5 =~ /^([0-9a-f]+)/ unless($?);
+  ($md5) = $md5 =~ /^([0-9a-f]+)/ unless($?);
 
   if($md5) {
     # i guess this is where we would check for dupes
