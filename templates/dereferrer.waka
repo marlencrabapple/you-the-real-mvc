@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title><var get_option('s_derefer_title')></title>
+<title><var string('s_derefer_title')></title>
 <meta http-equiv="refresh" content="2; URL=<var $url>">
 <style type="text/css">
   div {
@@ -15,7 +15,7 @@
 </head>
 <body>
 <div>
-  <var get_option('s_derefer_msg')><br>
+  <var string('s_derefer_msg')><br>
   <em><var $url></em>
 </div>
 </body>

@@ -284,7 +284,7 @@ sub get_section {
 #
 
 sub string {
-  get_string(@_)
+  return get_string(@_)
 }
 
 sub get_string {

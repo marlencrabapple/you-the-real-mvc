@@ -136,8 +136,8 @@ add_strings({
 
   s_invalidurl => 'Invalid URL.',
   s_derefer_title => 'Redirecting...',
-  s_derefer_msg => 'Redirecting you to: '
-,
+  s_derefer_msg => 'Redirecting you to: ',
+  
   s_sqlconf => 'SQL connection failure',							# Database connection failure
   s_sqlfail => 'Critical SQL problem!',							# SQL Failure
 

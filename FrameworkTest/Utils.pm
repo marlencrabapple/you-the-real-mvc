@@ -210,8 +210,8 @@ sub get_thumbnail_dimensions {
 sub process_file {
   my ($file, $time) = @_;
 
-  make_error(get_option('s_toobig')) if $file->size > get_option('max_kb') * 1024;
-  make_error(get_option('s_empty')) if $file->size <= 0;
+  make_error(string('s_toobig')) if $file->size > get_option('max_kb') * 1024;
+  make_error(string('s_empty')) if $file->size <= 0;
 
   # Plack::Request::Upload doesn't provide a file handle like CGI.pm so we have
   # to create one on our own.
@@ -222,18 +222,18 @@ sub process_file {
 
   # no reason why we can't throw these errors earlier...
   if(($ext eq 'webm') && ($$other{warning})) {
-    make_error(get_option('s_invalidwebm')) if $$other{warning} == 1;
-    make_error(get_option('s_webmaudio')) if $$other{warning} == 2;
-    make_error(get_option('s_webmduration')) if $$other{warning} == 3;
+    make_error(string('s_invalidwebm')) if $$other{warning} == 1;
+    make_error(string('s_webmaudio')) if $$other{warning} == 2;
+    make_error(string('s_webmduration')) if $$other{warning} == 3;
   }
 
   my $known = ($width || get_option('filetypes')->{$ext}) ? 1 : 0;
 
-  make_error(get_option('s_badformat')) unless(get_option('allow_unknown') or $known);
-	make_error(get_option('s_badformat')) if(grep { $_ eq $ext } @{get_option('forbidden_extensions')});
-	make_error(get_option('s_toobig')) if(get_option('max_image_width') and $width > get_option('max_image_width'));
-	make_error(get_option('s_toobig')) if(get_option('max_image_height') and $height > get_option('max_image_height'));
-	make_error(get_option('s_toobig')) if(get_option('max_image_pixels') and ($width * $height) > get_option('max_image_pixels'));
+  make_error(string('s_badformat')) unless(get_option('allow_unknown') or $known);
+	make_error(string('s_badformat')) if(grep { $_ eq $ext } @{get_option('forbidden_extensions')});
+	make_error(string('s_toobig')) if(get_option('max_image_width') and $width > get_option('max_image_width'));
+	make_error(string('s_toobig')) if(get_option('max_image_height') and $height > get_option('max_image_height'));
+	make_error(string('s_toobig')) if(get_option('max_image_pixels') and ($width * $height) > get_option('max_image_pixels'));
 
   # generate random filename - fudges the microseconds
   my $filebase = $time . sprintf("%03d", int(rand(1000)));
@@ -261,7 +261,7 @@ sub process_file {
   }
 
   open my $out_fh, ">>", path_to('img_dir') . $filename
-    or make_error(get_option('s_upfail') . ": $!");
+    or make_error(string('s_upfail') . ": $!");
 
   binmode $out_fh;
   while(read($fh, $buffer, 1024)) {

@@ -56,7 +56,7 @@ sub build {
     my $url = $$params{url};
     my $url_regexp = url_regexp();
 
-    make_error(get_option('s_invalidurl')) unless ($url =~ /$url_regexp/sg);
+    make_error(string('s_invalidurl')) unless ($url =~ /$url_regexp/sg);
 
     res(template('dereferrer')->(
       url => $url
