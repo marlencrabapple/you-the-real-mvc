@@ -32,7 +32,7 @@ our @EXPORT = (
   @Data::Dumper::EXPORT,
   @Plack::Request::EXPORT,
   @Plack::Response::EXPORT,
-  qw(encode decode Dumper),
+  qw(encode decode Dumper encode_base64 decode_base64 rand_bits),
   qw(get_option add_option add_options option add_string add_strings get_string string),
   qw(before_process_request before_dispatch request_handler set_section get_section),
   qw(get post res redirect get_res set_res is_ajax get_script_name),

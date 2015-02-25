@@ -15,6 +15,7 @@ my $static = Plack::App::File->new(root => "./static", content_type => sub {
 })->to_app;
 
 my $app = builder {
+  #enable 'Session', store => 'File';
   mount "/" => $static,
   mount "/app" => $script->run
 }

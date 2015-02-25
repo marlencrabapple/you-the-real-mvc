@@ -16,6 +16,8 @@ use FrameworkTest::Config;
 our $session = {};
 
 sub build {
+  make_tripkey(option('secretkey_file')) if(!-e option('secretkey_file'));
+
   before_process_request(sub{
     # not much info available here so who knows what we can do
   });

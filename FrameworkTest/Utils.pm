@@ -6,7 +6,7 @@ use parent 'Exporter';
 use Framework;
 
 our @EXPORT = (
-  qw(analyze_image process_file get_thumbnail_dimensions make_thumbnail check_ban path_to)
+  qw(analyze_image process_file get_thumbnail_dimensions make_thumbnail check_ban path_to make_tripkey)
 );
 
 #
@@ -288,6 +288,13 @@ sub process_file {
 # Misc Utils
 #
 
+sub make_tripkey {
+  my ($path) = @_;
+  my $key = encode_base64(rand_bits(1024));
 
+  open my $fh, '>:encoding(utf-8)', $path or die "Error: Cannot write to $path.\n";
+  print $fh $key;
+  close $fh;
+}
 
 1;

@@ -51,7 +51,8 @@ add_options({
     debug_mode => 0,
     minify => 0,
     static_dir => './static',
-    template_dir => './templates'
+    template_dir => './templates',
+    secretkey_file => 'secret'
   }
 });
 

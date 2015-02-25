@@ -3,5 +3,5 @@ index.html
 src
 res
 thumb
-tripkey
+secret
 *.sql
