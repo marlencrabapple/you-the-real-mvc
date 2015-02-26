@@ -19,7 +19,8 @@ sub build {
   make_tripkey(option('secretkey_file')) if(!-e option('secretkey_file'));
 
   before_process_request(sub{
-    # not much info available here so who knows what we can do
+    # not much available here besides $env and $self so there's not much
+    # less savvy users could do...
   });
 
   before_dispatch(sub{
@@ -36,11 +37,10 @@ sub build {
 
     if(@{$patharr}[0] eq 'admin') {
       if((my $crypt = password_hash($$params{berra}, get_option('mana_pass'))) ne get_option('mana_pass')) {
-        #make_error(get_option('s_wrongpass'));
-        redirect(get_script_name() . '/login?notice=1');
+        redirect(get_script_name() . '/login?notice=1')
       }
       else {
-        $session = { crypt => $crypt };
+        $session = { crypt => $crypt }
       }
     }
   });
@@ -77,15 +77,15 @@ sub build {
   });
 
   get('/json', sub {
-    res(['wait', 'what']);
+    res(['wait', 'what'])
   });
 
   get('/upload', sub {
-    res(template('form_test')->(title => 'File Upload'));
+    res(template('form_test')->(title => 'File Upload'))
   });
 
   get('/newhash', sub {
-    res(template('hash_form')->(title => 'password_hash() Test'));
+    res(template('hash_form')->(title => 'password_hash() Test'))
   });
 
   post('/newhash', sub {
