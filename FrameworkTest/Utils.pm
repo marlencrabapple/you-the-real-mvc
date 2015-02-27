@@ -139,15 +139,14 @@ sub analyze_webm {
     if($$stream{codec_type} eq 'video') {
       return (undef, undef, { warning => 1 }) if $$stream{codec_name} ne 'vp8';
       return (undef, undef, { warning => 1 }) unless $$stream{width} and $$stream{height};
-      ($width, $height) = ($$stream{width}, $$stream{height});
-
-      $offset = $$stream{duration} * (option('webm_tn_offset') / 100);
+      ($width, $height) = ($$stream{width}, $$stream{height})
     }
     elsif($$stream{codec_type} ne 'audio') {
       return (undef, undef, { warning => 1 })
     }
   }
 
+  $offset = int($$stdout{format}->{duration} * (option('webm_tn_offset') / 100));
   return ($width, $height, { offset => $offset });
 }
 
