@@ -115,11 +115,12 @@ sub post_stuff {
   my ($params, $req) = @_;
   my ($file, $fileinfo);
 
-  # handle file
+  # file stuff
   $file = $req->upload('file');
 
   if($file) {
     $fileinfo = process_file($file, time());
+    $$fileinfo{original_filename} = $$file{filename};
 
     if($$fileinfo{width}) {
       ($$fileinfo{tn_width}, $$fileinfo{tn_height}) = (get_thumbnail_dimensions($$fileinfo{width}, $$fileinfo{height}, 1));
