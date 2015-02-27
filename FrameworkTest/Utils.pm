@@ -241,11 +241,11 @@ sub process_file {
   $filename .= get_option('munge_unknown') unless($known);
 
   # check if a handler exists for a custom file type
-  if(ref(get_option('filetypes', get_section())->{$ext}) eq 'CODE') {
+  if(ref(option('filetypes')->{$ext}) eq 'CODE') {
     # maybe it would be better to return a handler and deal with it later?
     ($width, $height, $other) = get_option('filetypes')->{$ext}->($file, $filebase);
   }
-  elsif(get_option('filetypes', get_section())->{$ext}) {
+  elsif(option('filetypes')->{$ext}) {
     # kareha and wakaba restore the name, not sure what we'll do
   }
 
@@ -299,9 +299,10 @@ sub make_tripkey {
 
 sub path_to {
   my ($key, $http) = @_;
+  my $section = get_section();
 
   return ($http ? '' : './static/') . ($section ? "$section/" : '')
-    . option($key)
+    . (option($key) || $key);
 }
 
 1;

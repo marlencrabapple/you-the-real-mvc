@@ -123,10 +123,10 @@ sub post_stuff {
 
     if($$fileinfo{width}) {
       ($$fileinfo{tn_width}, $$fileinfo{tn_height}) = (get_thumbnail_dimensions($$fileinfo{width}, $$fileinfo{height}, 1));
-      $$fileinfo{thumb} = $$fileinfo{filebase} . "s.$$fileinfo{tn_ext}";
 
-      if($$fileinfo{other}->{has_tn}) {
-        $$fileinfo{tn_ext} = $$fileinfo{other}->{tn_ext}
+      if($$fileinfo{other}) {
+        $$fileinfo{tn_ext} = $$fileinfo{other}->{tn_ext};
+        $$fileinfo{thumb} = $$fileinfo{filebase} . "s.$$fileinfo{tn_ext}"
       }
       else {
         if($$fileinfo{ext} eq 'webm') {
@@ -136,17 +136,32 @@ sub post_stuff {
           $$fileinfo{tn_ext} = $$fileinfo{ext}
         }
 
+        $$fileinfo{thumb} = $$fileinfo{filebase} . "s.$$fileinfo{tn_ext}";
+
         make_thumbnail(path_to('img_dir') . $$fileinfo{filename},
           path_to('thumb_dir') . $$fileinfo{thumb}, $$fileinfo{ext},
           $$fileinfo{tn_width}, $$fileinfo{tn_height}) if $$fileinfo{ext} =~ /webm|gif|jpg|jpeg|png/;
       }
 
-      $$fileinfo{thumb_url} = path_to('thumb_dir', 1) . $$fileinfo{thumb};
-      $$fileinfo{file_url} = path_to('img_dir', 1) . $$fileinfo{filename};
+      $$fileinfo{thumb_url} = path_to('thumb_dir', 1) . $$fileinfo{thumb}
     }
     else {
-      # icon
+      if(my $icon = option('filetypes')->{$$fileinfo{ext}}) {
+        open my $ih, '<', path_to($icon);
+        binmode $ih;
+        ($$fileinfo{tn_ext}, $$fileinfo{tn_width}, $$fileinfo{tn_height})
+          = analyze_image(path_to($icon), $ih);
+        close $ih;
+
+        $$fileinfo{thumb} = $icon;
+        $$fileinfo{thumb_url} = path_to($icon, 1);
+      }
+      else {
+        # no thumbnail?
+      }
     }
+
+    $$fileinfo{file_url} = path_to('img_dir', 1) . $$fileinfo{filename};
   }
   else {
     make_error(get_option('s_nopic'))
