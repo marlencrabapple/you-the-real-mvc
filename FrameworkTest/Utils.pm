@@ -297,4 +297,11 @@ sub make_tripkey {
   close $fh;
 }
 
+sub path_to {
+  my ($key, $http) = @_;
+
+  return ($http ? '' : './static/') . ($section ? "$section/" : '')
+    . option($key)
+}
+
 1;
