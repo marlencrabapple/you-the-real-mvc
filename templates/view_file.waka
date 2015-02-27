@@ -1,8 +1,4 @@
 <part header>
-<h1><var $title></h1>
-<hr>
-
-<if $file>
 <div class="file">
 <if $$file{ext} =~ /^jp(?:e)?g|gif|png$/i>
 <a href="/<!var $$file{file_url}>" target="_blank"><var $$file{filename}></a><br>
@@ -12,18 +8,7 @@
 </a>
 </if>
 <if $$file{ext} =~ /^flv|mp4|webm|mkv|avi$/i>
-  <video src="/<!var $$file{file_url}>" poster="/<!var $$file{thumb_url}>" loop muted autoplay controls>
+  <video src="/<!var $$file{file_url}>" cover="/<!var $$file{thumb_url}>" loop>
 </if>
 </div>
-
-<pre>
-<var to_json($file, { pretty =\> 1 })>
-</pre>
-<hr>
-</if>
-
-<form action="/app/post" enctype="multipart/form-data" method="POST">
-  <label>File <input type="file" name="file"></label>
-  <button type="submit">Submit</button>
-</form>
 <part footer>

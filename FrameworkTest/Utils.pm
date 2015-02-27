@@ -159,7 +159,7 @@ sub make_thumbnail {
     my $ffmpeg = get_option('ffmpeg_path');
 
     $thumb =~ s/webm/jpg/i;
-    `$ffmpeg -ss $offset -i $file -v quiet -ss 00:00:00 -an -vframes 1 -f mjpeg -vf scale=$tn_width:$tn_height $thumb 2>&1`;
+    `$ffmpeg -ss $offset -i $file -v quiet -an -vframes 1 -vf scale=$tn_width:$tn_height $thumb 2>&1`;
     return 1 unless $?;
   }
   else {
