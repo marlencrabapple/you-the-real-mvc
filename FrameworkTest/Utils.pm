@@ -119,7 +119,7 @@ sub analyze_gif {
 
 sub analyze_webm {
   my ($file) = @_;
-  my ($ffprobe, $stdout, $width, $height);
+  my ($ffprobe, $stdout, $width, $height, $offset);
 
   my ($filename, $ext) = split('\.', $file);
   return () unless $ext eq 'webm';
@@ -139,18 +139,20 @@ sub analyze_webm {
     if($$stream{codec_type} eq 'video') {
       return (undef, undef, { warning => 1 }) if $$stream{codec_name} ne 'vp8';
       return (undef, undef, { warning => 1 }) unless $$stream{width} and $$stream{height};
-      ($width, $height) = ($$stream{width}, $$stream{height})
+      ($width, $height) = ($$stream{width}, $$stream{height});
+
+      $offset = $$stream{duration} * (option('webm_tn_offset') / 100);
     }
     elsif($$stream{codec_type} ne 'audio') {
       return (undef, undef, { warning => 1 })
     }
   }
 
-  return ($width, $height);
+  return ($width, $height, { offset => $offset });
 }
 
 sub make_thumbnail {
-  my ($file, $thumb, $ext, $tn_width, $tn_height) = @_;
+  my ($file, $thumb, $ext, $tn_width, $tn_height, $offset) = @_;
   my $quality = get_option('thumbnail_quality');
   my $convert = get_option('convert_path') || 'convert';
 
@@ -158,7 +160,7 @@ sub make_thumbnail {
     my $ffmpeg = get_option('ffmpeg_path');
 
     $thumb =~ s/webm/jpg/i;
-    `$ffmpeg -i $file -v quiet -ss 00:00:00 -an -vframes 1 -f mjpeg -vf scale=$tn_width:$tn_height $thumb 2>&1`;
+    `$ffmpeg -ss $offset -i $file -v quiet -ss 00:00:00 -an -vframes 1 -f mjpeg -vf scale=$tn_width:$tn_height $thumb 2>&1`;
     return 1 unless $?;
   }
   else {

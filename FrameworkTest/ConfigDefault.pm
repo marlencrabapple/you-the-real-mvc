@@ -42,6 +42,7 @@ add_options({
     ffprobe_path => 'ffprobe',
     webm_max_length => 300,
     webm_allow_audio => 1,
+    webm_tn_offset => 0,
 
     forbidden_extensions => ['php', 'php3' ,'php4', 'phtml', 'shtml', 'cgi', 'pl',
       'pm', 'py', 'r', 'exe', 'dll', 'scr', 'pif', 'asp', 'cfm', 'jsp', 'vbs'],

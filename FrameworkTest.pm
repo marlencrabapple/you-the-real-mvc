@@ -124,9 +124,10 @@ sub post_stuff {
     if($$fileinfo{width}) {
       ($$fileinfo{tn_width}, $$fileinfo{tn_height}) = (get_thumbnail_dimensions($$fileinfo{width}, $$fileinfo{height}, 1));
 
-      if($$fileinfo{other}) {
+      if($$fileinfo{other}->{has_thumb}) {
         $$fileinfo{tn_ext} = $$fileinfo{other}->{tn_ext};
-        $$fileinfo{thumb} = $$fileinfo{filebase} . "s.$$fileinfo{tn_ext}"
+        $$fileinfo{thumb} = $$fileinfo{filebase} . "s.$$fileinfo{tn_ext}";
+        $$fileinfo{thumb_url} = path_to('thumb_dir', 1) . $$fileinfo{thumb}
       }
       else {
         if($$fileinfo{ext} eq 'webm') {
@@ -140,7 +141,8 @@ sub post_stuff {
 
         make_thumbnail(path_to('img_dir') . $$fileinfo{filename},
           path_to('thumb_dir') . $$fileinfo{thumb}, $$fileinfo{ext},
-          $$fileinfo{tn_width}, $$fileinfo{tn_height}) if $$fileinfo{ext} =~ /webm|gif|jpg|jpeg|png/;
+          $$fileinfo{tn_width}, $$fileinfo{tn_height}, $$fileinfo{other}->{offset})
+          if $$fileinfo{ext} =~ /webm|gif|jpg|jpeg|png/;
       }
 
       $$fileinfo{thumb_url} = path_to('thumb_dir', 1) . $$fileinfo{thumb}
