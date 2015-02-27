@@ -19,8 +19,11 @@ add_option('pretty_json', 1);
 # Strings
 #
 
-add_option('s_invalidpath', 'Invalid path.');
-add_option('s_template_io_error', 'Error opening template file.');
+
+add_string('s_sqlconf', 'SQL connection failure');
+add_string('s_sqlfail', 'Critical SQL problem!');
+add_string('s_invalidpath', 'Invalid path.');
+add_string('s_template_io_error', 'Error opening template file.');
 
 #
 # Templates

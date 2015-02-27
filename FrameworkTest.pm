@@ -2,6 +2,7 @@ package FrameworkTest;
 
 use strict;
 
+use DBI;
 use Framework;
 
 use FrameworkTest::Utils;
@@ -13,10 +14,12 @@ use FrameworkTest::Config;
 # Routes
 #
 
+our $dbh;
 our $session = {};
 
 sub build {
   make_tripkey(option('secretkey_file')) if(!-e option('secretkey_file'));
+  $dbh = get_handle();
 
   before_process_request(sub{
     # not much available here besides $env and $self so there's not much
