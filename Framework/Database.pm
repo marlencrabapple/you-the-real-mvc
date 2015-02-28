@@ -3,11 +3,15 @@ package Framework::Database;
 use strict;
 
 use Framework::Base;
-use parent 'Exporter';
-use parent 'DBI';
+use DBI;
 use Encode;
+use parent 'Exporter';
 
 our ($dbh, $verbose, $dieonerror, @dbiargs);
+
+#
+# TBD: Figure out a way to utilize DBI's methods automatically without 'subclassing'.
+#
 
 sub new {
   my ($self, $dbiargs, $verbose, $dieonerror ,$no_connect) = @_;

@@ -152,11 +152,11 @@ sub analyze_webm {
 
 sub make_thumbnail {
   my ($file, $thumb, $ext, $tn_width, $tn_height, $offset) = @_;
-  my $quality = get_option('thumbnail_quality');
-  my $convert = get_option('convert_path') || 'convert';
+  my $quality = option('thumbnail_quality');
+  my $convert = option('convert_path') || 'convert';
 
   if($ext eq 'webm') {
-    my $ffmpeg = get_option('ffmpeg_path');
+    my $ffmpeg = option('ffmpeg_path');
 
     $thumb =~ s/webm/jpg/i;
     `$ffmpeg -ss $offset -i $file -v quiet -an -vframes 1 -vf scale=$tn_width:$tn_height $thumb 2>&1`;

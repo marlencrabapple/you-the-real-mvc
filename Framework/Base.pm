@@ -11,8 +11,7 @@ use MIME::Base64;
 use Data::Dumper;
 use HTML::Entities;
 use Plack::Request;
-use Plack::Response;
-use base qw(Exporter);
+use parent qw(Exporter);
 use Encode qw(decode encode);
 use Hash::Merge::Simple qw(merge);
 use Data::Entropy::Algorithms qw(rand_bits);
@@ -186,7 +185,7 @@ sub res {
 
   if(ref($content)) {
     $content = to_json($content, { pretty => get_option('pretty_json') });
-    $contenttype = 'application/json ;charset='
+    $contenttype = 'application/json;charset='
       . get_option('charset', get_section()) unless $contenttype
   }
 

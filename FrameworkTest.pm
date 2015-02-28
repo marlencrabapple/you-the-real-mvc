@@ -117,7 +117,7 @@ sub build {
   });
 
   get('/admin/:board', sub {
-    res("Congrats!");
+    res("Congrats!")
   });
 }
 
