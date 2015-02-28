@@ -11,7 +11,14 @@ our ($dbh, $verbose, $dieonerror, @dbiargs);
 
 #
 # TBD: Figure out a way to utilize DBI's methods automatically without 'subclassing'.
+# Maybe we can return a subroutine that handles this sort of thing as $self.
 #
+# Update: Looks like AUTOLOAD is precisely what we need!
+#
+
+sub AUTOLOAD {
+  print Dumper(@_);
+}
 
 sub new {
   my ($self, $dbiargs, $verbose, $dieonerror ,$no_connect) = @_;
@@ -21,14 +28,12 @@ sub new {
     $Framework::Database::dieonerror = $dieonerror;
     @Framework::Database::dbiargs = @{$dbiargs};
 
-    $dbh = init_connection($self, @dbiargs);
+    $dbh = init_connection(@dbiargs);
   }
-
-  return $self;
 }
 
 sub init_connection {
-  $dbh = shift->connect_cached(@_);
+  $dbh = DBI->connect_cached(@_);
 }
 
 sub wakeup {
