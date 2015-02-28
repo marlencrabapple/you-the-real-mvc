@@ -5,6 +5,7 @@ use strict;
 use parent 'Exporter'; # exporting exporter doesn't work as expected...
 use Framework::Base;
 use Framework::Defaults;
+use Framework::Database;
 
 our @EXPORT = (
   @Framework::Base::EXPORT,

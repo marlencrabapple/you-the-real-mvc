@@ -4,7 +4,7 @@ use strict;
 
 use DBI;
 use Framework;
-
+use FrameworkTest::Models;
 use FrameworkTest::Utils;
 use FrameworkTest::Strings;
 use FrameworkTest::ConfigDefault;
@@ -14,12 +14,23 @@ use FrameworkTest::Config;
 # Routes
 #
 
-our $dbh;
+our $dbh = Framework::Database->new([ option('sql_source'), option('sql_user'),
+  option('sql_pass'), { AutoCommit => 1 } ], 1);
+
 our $session = {};
 
 sub build {
   make_tripkey(option('secretkey_file')) if(!-e option('secretkey_file'));
-  $dbh = get_handle();
+  $dbh = $dbh->wakeup();
+
+  init_ban_table() unless $dbh->table_exists(option('sql_ban_table'));
+  init_user_table() unless $dbh->table_exists(option('sql_user_table'));
+  init_report_table() unless $dbh->table_exists(option('sql_report_table'));
+  init_pass_table() unless $dbh->table_exists(option('sql_pass_table'));
+
+  foreach my $board (options()) {
+    $dbh->init_post_table(option('sql_post_table', $board));
+  }
 
   before_process_request(sub{
     # not much available here besides $env and $self so there's not much

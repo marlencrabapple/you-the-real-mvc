@@ -4,4 +4,6 @@ src
 res
 thumb
 secret
+*.sqlite3
 *.sql
+*.db
