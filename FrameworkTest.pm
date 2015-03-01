@@ -21,16 +21,37 @@ our $session = {};
 
 sub build {
   make_tripkey(option('secretkey_file')) if(!-e option('secretkey_file'));
-  $dbh = $dbh->wakeup();
+
+  $dbh->wakeup();
 
   init_ban_table() unless $dbh->table_exists(option('sql_ban_table'));
   init_user_table() unless $dbh->table_exists(option('sql_user_table'));
   init_report_table() unless $dbh->table_exists(option('sql_report_table'));
   init_pass_table() unless $dbh->table_exists(option('sql_pass_table'));
 
-  foreach my $board (options()) {
-    $dbh->init_post_table(option('sql_post_table', $board));
+  #
+  # TBD: option() overhaul. The whole section thing kind of scares me.
+  #
+
+  foreach my $board (keys %{options()}) {
+    if($board ne 'global') {
+      set_section($board);
+
+      init_post_table(option('sql_post_table')) unless $dbh->table_exists(
+        option('sql_post_table'));
+
+      mkdir(path_to()) or die string('s_notwrite') . " ($!)"
+        if(!-e path_to());
+      mkdir(path_to(option('img_dir'))) or die string('s_notwrite') . " ($!)"
+        if(!-e path_to('img_dir'));
+      mkdir(path_to('thumb_dir')) or die string('s_notwrite') . " ($!)"
+        if(!-e path_to('thumb_dir'));
+      mkdir(path_to('res_dir')) or die string('s_notwrite') . " ($!)"
+        if(!-e path_to('res_dir'))
+    }
   }
+
+  set_section('global');
 
   before_process_request(sub{
     # not much available here besides $env and $self so there's not much

@@ -1,8 +1,9 @@
-package FrameworkTest::Config;
+package FrameworkTest::Models;
 
 use strict;
 
 use Framework;
+use parent 'Exporter';
 
 our @EXPORT = (
   qw(init_ban_table init_user_table init_report_table init_pass_table init_post_table)

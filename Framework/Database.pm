@@ -30,6 +30,8 @@ sub new {
 
     $dbh = init_connection(@dbiargs);
   }
+
+  return $self;
 }
 
 sub init_connection {

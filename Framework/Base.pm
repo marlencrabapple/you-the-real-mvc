@@ -32,7 +32,7 @@ our @EXPORT = (
   @Plack::Request::EXPORT,
   @Plack::Response::EXPORT,
   qw(encode decode Dumper encode_base64 decode_base64 rand_bits),
-  qw(get_option add_option add_options option add_string add_strings get_string string),
+  qw(add_options option options add_strings string strings),
   qw(before_process_request before_dispatch request_handler set_section get_section),
   qw(get post res redirect get_res set_res is_ajax get_script_name),
   qw(make_error compile_template template add_template to_json from_json),
@@ -208,10 +208,8 @@ sub redirect {
 
   my $res = $req->new_response;
   $res->redirect($url, ($code || 302));
-
-  print Dumper($env, $req);
-
   set_res($res->finalize);
+
   goto RES_OVERRIDE;
 }
 
@@ -244,11 +242,15 @@ sub option {
   $section = $section ? $section : get_section();
 
   if($value) {
-    set_option($key, $value, $section)
+    add_option($key, $value, $section)
   }
   else {
     return get_option($key, $section)
   }
+}
+
+sub options {
+  return $options;
 }
 
 sub get_option {
@@ -284,6 +286,10 @@ sub get_section {
 
 sub string {
   return get_string(@_)
+}
+
+sub strings {
+  return $strings
 }
 
 sub get_string {

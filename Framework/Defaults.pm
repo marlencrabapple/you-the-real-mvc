@@ -8,22 +8,29 @@ use Framework::Base;
 # Options
 #
 
-add_option('charset', 'UTF-8');
-add_option('debug_mode', 1);
-add_option('max_unicode', 1114111);
-add_option('template_dir', './remplates');
-add_option('minify', 0);
-add_option('pretty_json', 1);
+add_options({
+  'global' => {
+    charset => 'UTF-8',
+    debug_mode => 1,
+    max_unicode => 1114111,
+    template_dir => './templates',
+    minify => 0,
+    pretty_json => 1
+  }
+});
 
 #
 # Strings
 #
 
+add_strings({
+  s_sqlconf => 'SQL connection failure',
+  s_sqlfail => 'Critical SQL problem!',
+  s_invalidpath => 'Invalid path.',
+  s_template_io_error => 'Error opening template file.'
+});
 
-add_string('s_sqlconf', 'SQL connection failure');
-add_string('s_sqlfail', 'Critical SQL problem!');
-add_string('s_invalidpath', 'Invalid path.');
-add_string('s_template_io_error', 'Error opening template file.');
+
 
 #
 # Templates
