@@ -17,7 +17,7 @@ use Hash::Merge::Simple qw(merge);
 use Data::Entropy::Algorithms qw(rand_bits);
 use Crypt::Eksblowfish::Bcrypt qw(bcrypt bcrypt_hash en_base64 de_base64);
 
-our ($self, $env, $req, $section, $res, $templates, @before_process_request, @before_dispatch);
+our ($self, $env, $req, $res, $templates, @before_process_request, @before_dispatch);
 our $options = { global => {} };
 our $strings = { global => {} };
 
@@ -33,7 +33,7 @@ our @EXPORT = (
   @Plack::Response::EXPORT,
   qw(encode decode Dumper encode_base64 decode_base64 rand_bits),
   qw(add_options option options add_strings string strings),
-  qw(before_process_request before_dispatch request_handler set_section get_section),
+  qw(before_process_request before_dispatch request_handler),
   qw(get post res redirect get_res set_res is_ajax get_script_name),
   qw(make_error compile_template template add_template to_json from_json),
   qw(decode_string encode_string clean_string urlenc escamp),
@@ -168,10 +168,10 @@ sub request_handler {
     }
 
     return $match->{handler}->($queryvars, $req) if $match != 0;
-    make_error(get_option('s_invalidpath'), 404);
+    make_error(option('s_invalidpath'), 404);
   }
   catch {
-    if(get_option('debug_mode', get_section())) {
+    if(option('debug_mode')) {
       local $SIG{__DIE__} = 'DEFAULT'; # thanks http://blog.64p.org/entry/20101109/1289291797
       die $_;
     }
@@ -184,18 +184,18 @@ sub res {
   my ($content, $contenttype, $status, $return) = @_;
 
   if(ref($content)) {
-    $content = to_json($content, { pretty => get_option('pretty_json') });
+    $content = to_json($content, { pretty => option('pretty_json') });
     $contenttype = 'application/json;charset='
-      . get_option('charset', get_section()) unless $contenttype
+      . option('charset', get_section()) unless $contenttype
   }
 
   my $res = $req->new_response($status || 200);
 
   $res->content_type($contenttype || ('text/html; charset='
-    . get_option('charset', get_section())));
+    . option('charset', get_section())));
 
-  $res->body(encode_string($content, get_option('charset', get_section())));
-  $res->content_encoding('gzip') if get_option('gzip', get_section());
+  $res->body(encode_string($content, option('charset', get_section())));
+  $res->content_encoding('gzip') if option('gzip', get_section());
 
   set_res($res->finalize);
 
@@ -214,7 +214,7 @@ sub redirect {
 }
 
 sub make_error {
-  my ($content, $status, $contenttype) = @_;
+  my ($content, $status, $contenttype, $debug) = @_;
 
   if(((is_ajax()) && (!$contenttype)) || (ref($content))) {
     $res = { error => $content }
@@ -223,8 +223,7 @@ sub make_error {
     $res = template('error')->(error => $content)
   }
 
-  set_res(res($res, $contenttype, ($status || 500), 1));
-
+  set_res(res($res, $contenttype, ($status || 500), $debug));
   die $_, $content;
 }
 
@@ -238,26 +237,14 @@ sub is_ajax {
 #
 
 sub option {
-  my ($key, $value, $section) = @_;
-  $section = $section ? $section : get_section();
-
-  if($value) {
-    add_option($key, $value, $section)
-  }
-  else {
-    return get_option($key, $section)
-  }
-}
-
-sub options {
-  return $options;
-}
-
-sub get_option {
   my ($key, $section) = @_;
 
   $section = $section ? $section : 'global';
   return $$options{$section}->{$key} || $$options{'global'}->{$key}
+}
+
+sub options {
+  return $options;
 }
 
 sub add_option {
@@ -272,27 +259,11 @@ sub add_options {
   $Framework::Base::options = merge($Framework::Base::options, $options)
 }
 
-sub set_section {
-  $section = shift
-}
-
-sub get_section {
-  return $section
-}
-
 #
 # String Utils
 #
 
 sub string {
-  return get_string(@_)
-}
-
-sub strings {
-  return $strings
-}
-
-sub get_string {
   my ($key, $vars) = @_;
 
   if(ref($$strings{$key}) eq 'CODE') {
@@ -301,6 +272,10 @@ sub get_string {
   else {
     return $$strings{$key}
   }
+}
+
+sub strings {
+  return $strings
 }
 
 sub add_string {
@@ -324,7 +299,7 @@ sub init_templates {
       my $str;
 
       # File::Find uses chdir so we only need the file name, not the full path
-      open my $fh, '<:encoding(UTF-8)', $_ or die get_option('s_template_io_error'), "$!";
+      open my $fh, '<:encoding(UTF-8)', $_ or die option('s_template_io_error'), "$!";
       while(my $row = <$fh>) {
         $str .= $row;
       }
@@ -332,13 +307,13 @@ sub init_templates {
       chomp($str);
 
       if($ext eq 'wakap') {
-        add_template($fn, compile_template($str, get_option('minify'), 1))
+        add_template($fn, compile_template($str, option('minify'), 1))
       }
       else {
-        add_template($fn, compile_template($str, get_option('minify')))
+        add_template($fn, compile_template($str, option('minify')))
       }
     }
-  }, get_option('template_dir'));
+  }, option('template_dir'));
 }
 
 sub template {
@@ -440,7 +415,7 @@ sub forbidden_unicode {
   return 1 if length($dec) > 7 or length($hex) > 7; # too long numbers
 
   my $ord = ($dec or hex $hex);
-  return 1 if $ord > get_option('max_unicode'); # outside unicode range
+  return 1 if $ord > option('max_unicode'); # outside unicode range
   return 1 if $ord < 32; # control chars
   return 1 if $ord >= 0x7f and $ord <= 0x84; # control chars
   return 1 if $ord >= 0xd800 and $ord <= 0xdfff; # surrogate code points
