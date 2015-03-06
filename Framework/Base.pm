@@ -28,7 +28,7 @@ our $routes = {
 our @EXPORT = (
   qw(add_options option options add_strings string strings),
   qw(before_process_request before_dispatch request_handler),
-  qw(get post res redirect get_res set_res is_ajax get_script_name),
+  qw(get post route res redirect get_res set_res is_ajax get_script_name),
   qw(make_error compile_template template add_template),
   qw(decode_string encode_string clean_string urlenc escamp),
   qw(password_hash protocol_regexp url_regexp)
@@ -50,31 +50,34 @@ sub before_dispatch {
 
 sub get {
   my ($path, $sub, $pathhandlers) = @_;
-  add_route('GET', $path, $sub, $pathhandlers);
+  route('GET', $path, $sub, $pathhandlers);
 }
 
 sub post {
   my ($path, $sub, $pathhandlers) = @_;
-  add_route('POST', $path, $sub, $pathhandlers);
+  route('POST', $path, $sub, $pathhandlers);
 }
 
-sub add_route {
-  my ($method, $path, $sub, $pathhandlers) = @_;
+sub route {
+  my ($methods, $path, $sub, $pathhandlers) = @_;
+  my $methods = [ $methods ] unless ref $methods eq 'ARRAY';
 
-  push $$routes{$method}, {
-    handler => $sub,
-    path_str => $path,
-    path_arr => [
-      map {
-        $_ ? sub {
-          return {
-            var => "$_",
-            handler => (index $_, ':') == 0 ? $$pathhandlers{ substr $_, 1 } : undef
-          }
-        }->() : ()
-      } split('/', $path)
-    ]
-  };
+  foreach my $method (@{$methods}) {
+    push $$routes{$method}, {
+      handler => $sub,
+      path_str => $path,
+      path_arr => [
+        map {
+          $_ ? sub {
+            return {
+              var => "$_",
+              handler => (index $_, ':') == 0 ? $$pathhandlers{ substr $_, 1 } : undef
+            }
+          }->() : ()
+        } split('/', $path)
+      ]
+    }
+  }
 }
 
 sub set_res {

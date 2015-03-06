@@ -4,6 +4,7 @@ use strict;
 
 use DBI;
 use JSON;
+use Data::Dumper;
 
 use Framework;
 use FrameworkTest::Models;
@@ -32,23 +33,19 @@ sub build {
   init_report_table() unless $dbh->table_exists(option('sql_report_table'));
   init_pass_table() unless $dbh->table_exists(option('sql_pass_table'));
 
-  #
-  # TBD: option() overhaul. The whole section thing kind of scares me.
-  #
-
   foreach my $board (keys %{options()}) {
     if($board ne 'global') {
       init_post_table(option('sql_post_table', $board)) unless $dbh->table_exists(
         option('sql_post_table', $board));
 
-      mkdir(path_to()) or die string('s_notwrite') . " ($!)"
-        if(!-e path_to());
-      mkdir(path_to(option('img_dir'))) or die string('s_notwrite') . " ($!)"
-        if(!-e path_to('img_dir'));
-      mkdir(path_to('thumb_dir')) or die string('s_notwrite') . " ($!)"
-        if(!-e path_to('thumb_dir'));
-      mkdir(path_to('res_dir')) or die string('s_notwrite') . " ($!)"
-        if(!-e path_to('res_dir'))
+      mkdir(path_to(undef, $board)) or die string('s_notwrite') . " ($!)"
+        if(!-e path_to(undef, $board));
+      mkdir(path_to('img_dir', $board)) or die string('s_notwrite') . " ($!)"
+        if(!-e path_to('img_dir', $board));
+      mkdir(path_to('thumb_dir', $board)) or die string('s_notwrite') . " ($!)"
+        if(!-e path_to('thumb_dir', $board));
+      mkdir(path_to('res_dir', $board)) or die string('s_notwrite') . " ($!)"
+        if(!-e path_to('res_dir', $board))
     }
   }
 

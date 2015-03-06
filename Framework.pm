@@ -2,7 +2,7 @@ package Framework;
 
 use strict;
 
-use parent 'Exporter'; # exporting exporter doesn't work as expected...
+use parent 'Exporter';
 use Framework::Base;
 use Framework::Defaults;
 use Framework::Database;
