@@ -2,8 +2,10 @@ package FrameworkTest::Utils;
 
 use strict;
 
-use parent 'Exporter';
 use Framework;
+use MIME::Base64;
+use parent 'Exporter';
+use Data::Entropy::Algorithms qw(rand_bits);
 
 our @EXPORT = (
   qw(analyze_image process_file get_thumbnail_dimensions make_thumbnail check_ban path_to make_tripkey)
@@ -34,7 +36,7 @@ sub analyze_image {
   return ('png', @res) if(@res = analyze_png($handle));
   return ('gif', @res) if(@res = analyze_gif($handle));
 
-  if(get_option('allow_webm')) {
+  if(option('allow_webm')) {
     return ('webm', @res) if(@res = analyze_webm($file));
   }
 
@@ -299,11 +301,10 @@ sub make_tripkey {
 }
 
 sub path_to {
-  my ($key, $http) = @_;
-  my $section = get_section();
+  my ($key, $board, $http) = @_;
 
-  return ($http ? '' : './static/') . ($section ? "$section/" : '')
-    . (option($key) || $key);
+  return ($http ? '' : './static/') . ($board ? "$board/" : '')
+    . (option($key, $board) || $key);
 }
 
 1;

@@ -7,7 +7,6 @@ use Net::IP;
 use Try::Tiny;
 use File::Find;
 use Plack::Util;
-use MIME::Base64;
 use Data::Dumper;
 use HTML::Entities;
 use Plack::Request;
@@ -27,15 +26,10 @@ our $routes = {
 };
 
 our @EXPORT = (
-  @Plack::Util::EXPORT,
-  @Data::Dumper::EXPORT,
-  @Plack::Request::EXPORT,
-  @Plack::Response::EXPORT,
-  qw(encode decode Dumper encode_base64 decode_base64 rand_bits),
   qw(add_options option options add_strings string strings),
   qw(before_process_request before_dispatch request_handler),
   qw(get post res redirect get_res set_res is_ajax get_script_name),
-  qw(make_error compile_template template add_template to_json from_json),
+  qw(make_error compile_template template add_template),
   qw(decode_string encode_string clean_string urlenc escamp),
   qw(password_hash protocol_regexp url_regexp)
 );
@@ -186,16 +180,16 @@ sub res {
   if(ref($content)) {
     $content = to_json($content, { pretty => option('pretty_json') });
     $contenttype = 'application/json;charset='
-      . option('charset', get_section()) unless $contenttype
+      . option('charset') unless $contenttype
   }
 
   my $res = $req->new_response($status || 200);
 
   $res->content_type($contenttype || ('text/html; charset='
-    . option('charset', get_section())));
+    . option('charset')));
 
-  $res->body(encode_string($content, option('charset', get_section())));
-  $res->content_encoding('gzip') if option('gzip', get_section());
+  $res->body(encode_string($content, option('charset')));
+  $res->content_encoding('gzip') if option('gzip');
 
   set_res($res->finalize);
 

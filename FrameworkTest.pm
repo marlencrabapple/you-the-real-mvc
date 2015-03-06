@@ -3,6 +3,8 @@ package FrameworkTest;
 use strict;
 
 use DBI;
+use JSON;
+
 use Framework;
 use FrameworkTest::Models;
 use FrameworkTest::Utils;
@@ -18,6 +20,7 @@ our $dbh = Framework::Database->new([ option('sql_source'), option('sql_user'),
   option('sql_pass'), { AutoCommit => 1 } ], 1);
 
 our $session = {};
+our $board;
 
 sub build {
   make_tripkey(option('secretkey_file')) if(!-e option('secretkey_file'));
@@ -35,10 +38,8 @@ sub build {
 
   foreach my $board (keys %{options()}) {
     if($board ne 'global') {
-      set_section($board);
-
-      init_post_table(option('sql_post_table')) unless $dbh->table_exists(
-        option('sql_post_table'));
+      init_post_table(option('sql_post_table', $board)) unless $dbh->table_exists(
+        option('sql_post_table', $board));
 
       mkdir(path_to()) or die string('s_notwrite') . " ($!)"
         if(!-e path_to());
@@ -50,8 +51,6 @@ sub build {
         if(!-e path_to('res_dir'))
     }
   }
-
-  set_section('global');
 
   before_process_request(sub{
     # not much available here besides $env and $self so there's not much
