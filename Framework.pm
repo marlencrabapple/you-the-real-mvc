@@ -20,7 +20,7 @@ sub new {
 }
 
 sub build {
-  # wat
+  res('Hello, world!')
 }
 
 sub run {
