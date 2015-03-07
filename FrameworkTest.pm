@@ -28,17 +28,16 @@ sub build {
 
   $dbh->wakeup();
 
-  init_ban_table() unless $dbh->table_exists(option('sql_ban_table'));
-  init_user_table() unless $dbh->table_exists(option('sql_user_table'));
-  init_report_table() unless $dbh->table_exists(option('sql_report_table'));
-  init_pass_table() unless $dbh->table_exists(option('sql_pass_table'));
-
-  print Dumper(options());
+  init_ban_table($dbh) unless $dbh->table_exists(option('sql_ban_table'));
+  init_user_table($dbh) unless $dbh->table_exists(option('sql_user_table'));
+  init_report_table($dbh) unless $dbh->table_exists(option('sql_report_table'));
+  init_pass_table($dbh) unless $dbh->table_exists(option('sql_pass_table'));
 
   foreach my $board (keys %{options()}) {
     if($board ne 'global') {
-      init_post_table(option('sql_post_table', $board)) unless $dbh->table_exists(
-        option('sql_post_table', $board));
+      my $table = option('sql_post_table', $board) || $board . '_posts';
+      
+      init_post_table($dbh, $table) unless $dbh->table_exists($table);
 
       mkdir(path_to(undef, $board)) or die string('s_notwrite') . " ($!)"
         if(!-e path_to(undef, $board));

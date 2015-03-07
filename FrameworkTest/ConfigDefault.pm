@@ -9,7 +9,7 @@ add_options({
     site_name => 'Glaukaba',
     board_name => 'Glaukaba Image Board',
     subtitle => 'Nothing to see here',
-
+    
     sql_ban_table => 'bans',
     sql_user_table => 'users',
     sql_report_table => 'reports',
