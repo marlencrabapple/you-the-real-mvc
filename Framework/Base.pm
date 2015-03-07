@@ -12,13 +12,13 @@ use HTML::Entities;
 use Plack::Request;
 use parent qw(Exporter);
 use Encode qw(decode encode);
-use Hash::Merge::Simple qw(merge);
 use Data::Entropy::Algorithms qw(rand_bits);
 use Crypt::Eksblowfish::Bcrypt qw(bcrypt bcrypt_hash en_base64 de_base64);
 
+use Framework::Options;
+use Framework::Strings;
+
 our ($self, $env, $req, $res, $templates, @before_process_request, @before_dispatch);
-our $options = { global => {} };
-our $strings = { global => {} };
 
 our $routes = {
   GET => [],
@@ -26,6 +26,8 @@ our $routes = {
 };
 
 our @EXPORT = (
+  @Framework::Options::EXPORT,
+  @Framework::Strings::EXPORT,
   qw(add_options option options add_strings string strings),
   qw(before_process_request before_dispatch request_handler),
   qw(get post route res redirect get_res set_res is_ajax get_script_name),
@@ -227,62 +229,6 @@ sub make_error {
 sub is_ajax {
   return 1 if $req->header('HTTP_X_REQUESTED_WITH') =~ /xmlhttprequest/i;
   return 0;
-}
-
-#
-# Config Utils
-#
-
-sub option {
-  my ($key, $section) = @_;
-
-  $section = $section ? $section : 'global';
-  return $$options{$section}->{$key} || $$options{'global'}->{$key}
-}
-
-sub options {
-  return $options;
-}
-
-sub add_option {
-  my ($key, $value, $section) = @_;
-
-  $section = $section ? $section : 'global';
-  $$options{$section}->{$key} = $value
-}
-
-sub add_options {
-  my ($options) = @_;
-  $Framework::Base::options = merge($Framework::Base::options, $options)
-}
-
-#
-# String Utils
-#
-
-sub string {
-  my ($key, $vars) = @_;
-
-  if(ref($$strings{$key}) eq 'CODE') {
-    return $$strings{$key}->($vars)
-  }
-  else {
-    return $$strings{$key}
-  }
-}
-
-sub strings {
-  return $strings
-}
-
-sub add_string {
-  my ($key, $value) = @_;
-  $$strings{$key} = $value
-}
-
-sub add_strings {
-  my ($strings) = @_;
-  $Framework::Base::strings = merge($Framework::Base::strings, $strings)
 }
 
 #

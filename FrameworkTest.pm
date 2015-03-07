@@ -33,6 +33,8 @@ sub build {
   init_report_table() unless $dbh->table_exists(option('sql_report_table'));
   init_pass_table() unless $dbh->table_exists(option('sql_pass_table'));
 
+  print Dumper(options());
+
   foreach my $board (keys %{options()}) {
     if($board ne 'global') {
       init_post_table(option('sql_post_table', $board)) unless $dbh->table_exists(
