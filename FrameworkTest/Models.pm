@@ -27,7 +27,7 @@ sub init_table {
 
 sub init_post_table {
   init_table(@_, [
-    { name => 'no', type => 'INTEGER', auto_increment => 1},
+    { name => 'no', auto_increment => 1},
     { name => 'threadno', type => 'INTEGER'},
     { name => 'created', type => 'INTEGER'},
     { name => 'lasthit', type => 'INTEGER'},
@@ -64,7 +64,27 @@ sub init_post_table {
 }
 
 sub init_ban_table { }
-sub init_user_table { }
+sub init_user_table {
+  my ($dbh) = @_;
+
+  init_table($dbh, option('sql_user_table'), [
+    { name => 'no', auto_increment => 1 },
+    { name => 'username' },
+    { name => 'password' },
+    { name => 'email' },
+    { name => 'class', type => 'INTEGER' },
+    { name => 'boards' },
+    { name => 'lastlogin', type => 'INTEGER' },
+    { name => 'lastip' }
+  ]);
+
+  my $user = option('default_user');
+  my $sth = $dbh->prepare("INSERT INTO " . option('sql_user_table') . " VALUES("
+    . "NULL,?,?,?,?,NULL,NULL,NULL)") or $dbh->error();
+
+  $sth->execute($$user{username}, password_hash($$user{password}), $$user{email}, 1)
+    or $dbh->error()
+}
 sub init_report_table { }
 sub init_pass_table { }
 

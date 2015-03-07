@@ -9,11 +9,17 @@ add_options({
     site_name => 'Glaukaba',
     board_name => 'Glaukaba Image Board',
     subtitle => 'Nothing to see here',
-    
+
     sql_ban_table => 'bans',
     sql_user_table => 'users',
     sql_report_table => 'reports',
     sql_pass_table => 'pass',
+
+    default_user => {
+      username => 'admin',
+      password => 'admin',
+      email => 'admin@admin.com'
+    },
 
     max_threads_index => 15,
     max_replies_index => 5,

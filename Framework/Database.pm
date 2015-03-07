@@ -10,13 +10,6 @@ use parent 'Exporter';
 
 our ($AUTOLOAD, $dbh, $verbose, $dieonerror, @dbiargs);
 
-#
-# TBD: Figure out a way to utilize DBI's methods automatically without 'subclassing'.
-# Maybe we can return a subroutine that handles this sort of thing as $self.
-#
-# Update: Looks like AUTOLOAD is precisely what we need!
-#
-
 sub AUTOLOAD {
   my $self = shift;
   my $sub = $AUTOLOAD;
