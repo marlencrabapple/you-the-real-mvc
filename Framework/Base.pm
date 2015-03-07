@@ -165,7 +165,7 @@ sub request_handler {
     }
 
     return $match->{handler}->($queryvars, $req) if $match != 0;
-    make_error(option('s_invalidpath'), 404);
+    make_error(string('s_invalidpath'), 404);
   }
   catch {
     if(option('debug_mode')) {
