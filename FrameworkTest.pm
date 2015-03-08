@@ -7,6 +7,7 @@ use JSON;
 use Data::Dumper;
 
 use Framework;
+use FrameworkTest::Post;
 use FrameworkTest::Models;
 use FrameworkTest::Utils;
 use FrameworkTest::Strings;
@@ -36,7 +37,7 @@ sub build {
   foreach my $board (keys %{options()}) {
     if($board ne 'global') {
       my $table = option('sql_post_table', $board) || $board . '_posts';
-      
+
       init_post_table($dbh, $table) unless $dbh->table_exists($table);
 
       mkdir(path_to(undef, $board)) or die string('s_notwrite') . " ($!)"
@@ -97,40 +98,21 @@ sub build {
     ))
   });
 
-  get('/login', sub {
-    my ($params) = @_;
-    my $msg = get_string($$params{notice});
+  get('/ipinfo', sub {
+    my ($params, $req) = @_;
 
-    res(template('index')->(
-      title => 'Login',
-      content => 'Login faget'.
-      msg => $msg
-    ))
+    res(Dumper($$req{net_ip}))
   });
 
-  get('/json', sub {
-    res(['wait', 'what'])
+  get('/ipinfo/:ip', sub {
+
   });
 
-  get('/upload', sub {
-    res(template('form_test')->(title => 'File Upload'))
-  });
+  get('/:board', sub {
+    res('wat');
+  }, { board => sub { return is_board($_[0]) } });
 
-  get('/newhash', sub {
-    res(template('hash_form')->(title => 'password_hash() Test'))
-  });
-
-  post('/newhash', sub {
-    my ($params) = @_;
-
-    make_error('You must enter a password to be hashed.') unless $$params{berra};
-
-    res({
-      hash => password_hash($$params{berra}, $$params{salt}, $$params{cost})
-    });
-  });
-
-  post('/post', sub {
+  post('/:board/post', sub {
     post_stuff(@_)
   });
 
@@ -145,7 +127,10 @@ sub build {
 
 sub post_stuff {
   my ($params, $req) = @_;
-  my ($file, $fileinfo);
+  my ($time, $post, $file, $fileinfo);
+
+  $time = time();
+  $post = FrameworkTest::Post->new($params);
 
   # file stuff
   $file = $req->upload('file');
@@ -207,6 +192,12 @@ sub post_stuff {
   }
 
   res(template('form_test')->(file => $fileinfo, title => 'File Upload'))
+}
+
+sub is_board {
+  my ($board) = @_;
+  return 1 if options()->{$_[0]}->{sql_post_table};
+  return 0
 }
 
 1;

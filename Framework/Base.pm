@@ -2,19 +2,16 @@ package Framework::Base;
 
 use strict;
 
+use parent qw(Exporter);
+
 use JSON;
-use Net::IP;
 use Try::Tiny;
 use File::Find;
-use Plack::Util;
-use Data::Dumper;
-use HTML::Entities;
-use Plack::Request;
-use parent qw(Exporter);
 use Encode qw(decode encode);
 use Data::Entropy::Algorithms qw(rand_bits);
 use Crypt::Eksblowfish::Bcrypt qw(bcrypt bcrypt_hash en_base64 de_base64);
 
+use Framework::Request;
 use Framework::Options;
 use Framework::Strings;
 
@@ -33,7 +30,8 @@ our @EXPORT = (
   qw(get post route res redirect get_res set_res is_ajax get_script_name),
   qw(make_error compile_template template add_template),
   qw(decode_string encode_string clean_string urlenc escamp),
-  qw(password_hash protocol_regexp url_regexp)
+  qw(password_hash protocol_regexp url_regexp),
+  qw(ip_info)
 );
 
 #
@@ -96,7 +94,7 @@ sub request_handler {
   ($Framework::Base::self, $Framework::Base::env) = ($self, $env);
 
   try {
-    $req = Plack::Request->new($env);
+    $req = Framework::Request->new($env);
     $path = $req->path_info || '/';
     $method = $req->method;
     @path_arr = map { ($_ ne '') || ($_ eq "0") ? "$_" : () } split '/', $path;
@@ -482,6 +480,7 @@ sub js_hash {
   my %hash = @_;
   return "{" . (join ",", map { "'$_':$hash{$_}" } keys %hash) . "}";
 }
+
 
 #
 # Crypto code
