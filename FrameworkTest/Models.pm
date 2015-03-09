@@ -19,8 +19,12 @@ sub init_table {
         if($$column{type}) {
           if($$column{type} eq 'ip') {
             return 'TEXT' if option('sql_source') =~ /^DBI:SQLite/i
-            return 'VARBINARY(16)' if option('sql_source') =~ /^DBI:MySQL/i
-            return 'inet' # bytea(16) might be better if it actually works...
+            return 'VARBINARY(16)' if option('sql_source') =~ /^DBI:MySQL/i;
+
+            # bytea(16) might be better if it actually works...
+            # No idea if this can detect an IP in binary either.
+            return 'inet' if option('sql_source') =~ /^DBI:Pg/i;
+            return 'TEXT';
           }
 
           return $$column{type}
@@ -76,6 +80,7 @@ sub init_post_table {
 }
 
 sub init_ban_table { }
+
 sub init_user_table {
   my ($dbh) = @_;
 
@@ -97,7 +102,9 @@ sub init_user_table {
   $sth->execute($$user{username}, password_hash($$user{password}), $$user{email}, 1)
     or $dbh->error()
 }
+
 sub init_report_table { }
+
 sub init_pass_table { }
 
 1;

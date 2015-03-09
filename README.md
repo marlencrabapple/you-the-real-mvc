@@ -14,11 +14,11 @@ You The Real MVC is a minimal PSGI/Plack web framework (more of a mostly MVC int
         use Framework;
 
         sub build {
-          get('/', sub{
+          get('/', sub {
             res('Hello, world!')
           });
 
-          get('/:name', sub{
+          get('/:name', sub {
             res('Hello, ' . shift->{name} . '!')
           })
         }
