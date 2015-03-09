@@ -15,7 +15,19 @@ sub init_table {
 
   foreach my $column (@{$columns}) {
     my $column_str = "`$$column{name}` " . ($$column{auto_increment} ?
-      $dbh->get_autoincrement() : ($$column{type} || 'TEXT'));
+      $dbh->get_autoincrement() : sub {
+        if($$column{type}) {
+          if($$column{type} eq 'ip') {
+            return 'TEXT' if option('sql_source') =~ /^DBI:SQLite/i
+            return 'VARBINARY(16)' if option('sql_source') =~ /^DBI:MySQL/i
+            return 'inet' # bytea(16) might be better if it actually works...
+          }
+
+          return $$column{type}
+        }
+
+        return 'TEXT';
+      }->());
 
     push @column_arr, $column_str;
   }
@@ -27,12 +39,12 @@ sub init_table {
 
 sub init_post_table {
   init_table(@_, [
-    { name => 'no', auto_increment => 1},
-    { name => 'threadno', type => 'INTEGER'},
-    { name => 'created', type => 'INTEGER'},
-    { name => 'lasthit', type => 'INTEGER'},
+    { name => 'no', auto_increment => 1 },
+    { name => 'threadno', type => 'INTEGER' },
+    { name => 'created', type => 'INTEGER' },
+    { name => 'lasthit', type => 'INTEGER' },
 
-    { name => 'ip' },
+    { name => 'ip', type => 'ip' },
     { name => 'id' },
     { name => 'hostname' },
 
@@ -47,19 +59,19 @@ sub init_post_table {
 
     { name => 'image' },
     { name => 'filename' },
-    { name => 'size', type => 'INTEGER'},
+    { name => 'size', type => 'INTEGER' },
     { name => 'md5' },
-    { name => 'width', type => 'INTEGER'},
-    { name => 'height', type => 'INTEGER'},
-    { name => 'tnwidth', type => 'TINYINT'},
-    { name => 'tnheight', type => 'TINYINT'},
+    { name => 'width', type => 'INTEGER' },
+    { name => 'height', type => 'INTEGER' },
+    { name => 'tnwidth', type => 'TINYINT' },
+    { name => 'tnheight', type => 'TINYINT' },
 
-    { name => 'sticky', type => 'TINYINT'},
-    { name => 'permasage', type => 'TINYINT'},
-    { name => 'locked', type => 'TINYINT'},
-    { name => 'tnmask', type => 'TINYINT'},
+    { name => 'sticky', type => 'TINYINT' },
+    { name => 'permasage', type => 'TINYINT' },
+    { name => 'locked', type => 'TINYINT' },
+    { name => 'tnmask', type => 'TINYINT' },
     { name => 'staffpost' },
-    { name => 'passnum', type => 'TINYINT'},
+    { name => 'passnum', type => 'TINYINT' },
   ])
 }
 

@@ -10,15 +10,8 @@ use parent 'Net::IP';
 # namespace with anything more than our own stuff
 #
 
-sub in_range {
-  my ($netip) = @_;
+sub hostname {
 
-  if($$netip->version() == 4) {
-
-  }
-  elsif($$netip->version() == 6) {
-
-  }
 }
 
 1;
