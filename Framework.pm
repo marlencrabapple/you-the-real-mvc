@@ -15,10 +15,11 @@ our @EXPORT = (
 );
 
 sub new {
-  my $self = shift;
+  my $class = shift;
   Framework::Base::init_templates();
-  $self->build();
-  return $self;
+  $class->build();
+
+  return bless {}, $class
 }
 
 sub build {
@@ -32,7 +33,7 @@ sub run {
     my ($env) = @_;
 
     foreach my $sub (@Framework::Base::before_process_request) {
-      $sub->($env);
+      $sub->($env)
     }
 
     my $res = $self->request_handler($env);
@@ -41,10 +42,10 @@ sub run {
     # currently used for everything but make_error()
     RES_OVERRIDE:
       $res = get_res();
-      return $res;
+      return $res
   };
 
-  return $app;
+  return $app
 }
 
 1;

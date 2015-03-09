@@ -30,8 +30,6 @@ add_strings({
   s_template_io_error => 'Error opening template file.'
 });
 
-
-
 #
 # Templates
 #

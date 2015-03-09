@@ -18,7 +18,7 @@ sub init_table {
       $dbh->get_autoincrement() : sub {
         if($$column{type}) {
           if($$column{type} eq 'ip') {
-            return 'TEXT' if option('sql_source') =~ /^DBI:SQLite/i
+            return 'TEXT' if option('sql_source') =~ /^DBI:SQLite/i;
             return 'VARBINARY(16)' if option('sql_source') =~ /^DBI:MySQL/i;
 
             # bytea(16) might be better if it actually works...

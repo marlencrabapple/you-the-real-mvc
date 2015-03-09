@@ -15,7 +15,8 @@ use Framework::Request;
 use Framework::Options;
 use Framework::Strings;
 
-our ($self, $env, $req, $res, $templates, @before_process_request, @before_dispatch);
+our ($self, $env, $req, $res, $prefix, $templates, @prefixes, @before_process_request,
+  @before_dispatch);
 
 our $routes = {
   GET => [],
@@ -27,7 +28,7 @@ our @EXPORT = (
   @Framework::Strings::EXPORT,
   qw(add_options option options add_strings string strings),
   qw(before_process_request before_dispatch request_handler),
-  qw(get post route res redirect get_res set_res is_ajax get_script_name),
+  qw(get post route prefix res redirect get_res set_res is_ajax get_script_name),
   qw(make_error compile_template template add_template),
   qw(decode_string encode_string clean_string urlenc escamp),
   qw(password_hash protocol_regexp url_regexp),
@@ -62,6 +63,8 @@ sub route {
   my ($methods, $path, $sub, $pathhandlers) = @_;
   my $methods = [ $methods ] unless ref $methods eq 'ARRAY';
 
+  $path = $prefix . $path if $prefix;
+
   foreach my $method (@{$methods}) {
     push $$routes{$method}, {
       handler => $sub,
@@ -71,13 +74,32 @@ sub route {
           $_ ? sub {
             return {
               var => "$_",
-              handler => (index $_, ':') == 0 ? $$pathhandlers{ substr $_, 1 } : undef
+              handler => (index $_, ':') == 0 ? $$pathhandlers{ substr $_, 1 }
+                : undef
             }
           }->() : ()
         } split('/', $path)
       ]
     }
   }
+}
+
+sub prefix {
+  my ($prefix, $sub) = @_;
+
+  # prefix('admin', sub {
+  #   get('/user/:userid', sub {
+  #     res(fetch_user(shift->{userid}))
+  #   }
+  # }
+
+  # Set global prefix
+  # route() sees global prefix and prepends it to anything it ads
+  # Remove global prefix
+
+  $Framework::Base::prefix = $prefix;
+  $sub->();
+  $Framework::Base::prefix = ''
 }
 
 sub set_res {
