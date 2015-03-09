@@ -4,7 +4,7 @@ You The Real MVC is a minimal PSGI/Plack web framework (more of a mostly MVC int
 # How To Use #
 1. Clone this repo.
 
-        $ git clone https://github.com/marlencrabapple/kareha-psgi.git
+        $ git clone https://github.com/marlencrabapple/you-the-real-mvc.git
 
 2. Write your application.
 
