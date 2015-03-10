@@ -11,16 +11,29 @@ sub build {
     res('Hello, ' . shift->{name} . '!')
   });
 
+  get('/user/:userid', sub {
+    my $params = shift;
+    view_user($$params{userid});
+  });
+
   prefix('/api', sub {
     get('/user/:userid', sub {
       my $params = shift;
-      my $userid = $$params{userid};
-      my $msg = 'If this weren\'t an example you\'d be viewing details for user'
-        . " #$userid.";
-
-      res({ userid => $userid, msg => $msg })
+      view_user($$params{userid}, 1)
     })
   })
+}
+
+sub view_user {
+  my ($userid, $ajax) = @_;
+  my $msg = 'If this wasn\'t an example you\'d be viewing details for user'
+    . " #$userid.";
+
+  if($ajax) {
+    res({ userid => $userid, msg => $msg })
+  }
+
+  res($msg)
 }
 
 my $app = JustATest->new;

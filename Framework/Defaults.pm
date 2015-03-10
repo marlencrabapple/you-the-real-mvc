@@ -24,6 +24,7 @@ add_options({
 #
 
 add_strings({
+  s_error => 'Error!',
   s_sqlconf => 'SQL connection failure',
   s_sqlfail => 'Critical SQL problem!',
   s_invalidpath => 'Invalid path.',

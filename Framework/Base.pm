@@ -186,6 +186,8 @@ sub request_handler {
       $sub->($env, $req, $queryvars, $path, \@path_arr)
     }
 
+    # Maybe $queryvars and $req should be globals? It would cut down on some
+    # boiler plate code...
     return $match->{handler}->($queryvars, $req) if $match != 0;
     make_error(string('s_invalidpath'), 404);
   }
