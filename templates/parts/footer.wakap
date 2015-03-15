@@ -5,7 +5,7 @@
   	+ <a href="//onlinebargainshrimptoyourdoor.com/">glaukaba
     <if option('display_version')><var string('s_version')></if></a>
     -<br>
-  	<var string('s_footer')>
+    <var string('s_footer')>
   </footer>
 </div>
 </body>

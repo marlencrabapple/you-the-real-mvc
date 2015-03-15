@@ -2,7 +2,7 @@ package Framework::Request;
 
 use strict;
 
-use Framework::IP;
+use Net::IP;
 
 use parent 'Plack::Request';
 
@@ -11,7 +11,7 @@ sub new {
   my ($class, $env) = @_;
   die unless ref($env) eq 'HASH';
 
-  bless { env => $env, net_ip => Framework::IP->new($$env{REMOTE_ADDR}) }, $class;
+  bless { env => $env, net_ip => Net::IP->new($$env{REMOTE_ADDR}) }, $class;
 }
 
 sub uri_for {

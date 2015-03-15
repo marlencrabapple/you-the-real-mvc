@@ -4,7 +4,6 @@ use strict;
 
 use parent 'Exporter';
 
-use Framework::IP;
 use Framework::Base;
 use Framework::Defaults;
 use Framework::Database;

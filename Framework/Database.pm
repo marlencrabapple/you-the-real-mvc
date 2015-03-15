@@ -19,7 +19,7 @@ sub AUTOLOAD {
 }
 
 sub new {
-  my ($self, $dbiargs, $verbose, $dieonerror ,$no_connect) = @_;
+  my ($class, $dbiargs, $verbose, $dieonerror ,$no_connect) = @_;
 
   unless($no_connect) {
     $Framework::Database::verbose = $verbose;
@@ -29,7 +29,7 @@ sub new {
     $dbh = _init_connection(@dbiargs);
   }
 
-  return $self;
+  return bless {}, $class;
 }
 
 sub _init_connection {
