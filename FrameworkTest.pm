@@ -93,7 +93,11 @@ sub build {
 
     make_error(string('s_invalidurl')) unless ($url =~ /$url_regexp/sg);
 
+    # not going to bother trying to modify $url_regexp to return this as a match
+    my ($domain) = ($url =~ /(?:\/)?([a-z0-9\.]+)\//i);
+
     res(template('dereferrer')->(
+      domain => $domain,
       url => $url
     ))
   });

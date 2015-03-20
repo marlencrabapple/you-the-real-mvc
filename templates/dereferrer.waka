@@ -15,8 +15,8 @@
 </head>
 <body>
 <div>
-  <var string('s_derefer_msg')><br>
-  <em><var $url></em>
+  <var string('s_derefer_msg')>
+  <em><var $domain></em>
 </div>
 </body>
 </html>
