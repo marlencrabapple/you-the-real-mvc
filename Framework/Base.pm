@@ -183,7 +183,7 @@ sub request_handler {
     }
 
     foreach my $sub (@before_dispatch) {
-      $sub->($env, $req, $queryvars, $path, \@path_arr)
+      $sub->($req, $queryvars, $path, \@path_arr)
     }
 
     # Maybe $queryvars and $req should be globals? It would cut down on some
