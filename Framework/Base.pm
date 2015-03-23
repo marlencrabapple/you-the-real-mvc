@@ -202,7 +202,7 @@ sub request_handler {
 }
 
 sub res {
-  my ($content, $contenttype, $status, $return) = @_;
+  my ($content, $contenttype, $status, $headers, $return) = @_;
 
   if(ref($content)) {
     $content = to_json($content, { pretty => option('pretty_json') });
@@ -217,6 +217,10 @@ sub res {
 
   $res->body(encode_string($content, option('charset')));
   $res->content_encoding('gzip') if option('gzip');
+
+  foreach my $header (@{$headers}) {
+    $res->header($header);
+  }
 
   set_res($res->finalize);
 
@@ -244,7 +248,7 @@ sub make_error {
     $res = template('error')->(error => $content)
   }
 
-  set_res(res($res, $contenttype, ($status || 500), $debug));
+  set_res(res($res, $contenttype, ($status || 500), undef, $debug));
   die $_, $content;
 }
 
