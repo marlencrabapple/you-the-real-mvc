@@ -403,6 +403,7 @@ sub decode_string {
   my ($str, $charset, $noentities) = @_;
   my $use_unicode = $charset ? 1 : 0;
 
+  $charset = option('charset') unless $charset;
   $str = decode($charset, $str) if $use_unicode;
 
   $str =~ s{(&#([0-9]*)([;&])|&#([x&])([0-9a-f]*)([;&]))}{
