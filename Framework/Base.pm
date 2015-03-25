@@ -396,6 +396,8 @@ sub forbidden_unicode {
 
 sub encode_string {
   my ($str, $charset) = @_;
+  
+  $charset = option('charset') unless $charset;
   return encode($charset, $str, 0x0400);
 }
 
