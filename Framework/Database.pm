@@ -15,7 +15,7 @@ sub AUTOLOAD {
   my $sub = $AUTOLOAD;
   $sub =~ s/.*:://;
 
-  $dbh->$sub(@_) or print "$!\n";
+  $dbh->$sub(@_) or return 0;
 }
 
 sub new {
@@ -61,8 +61,9 @@ sub table_exists {
 
 sub get_decoded_hashref {
   my ($sth) = @_;
+  my $row = $sth->fetchrow_hashref;
 
-  if(my $row = $sth->fetchrow_hashref) {
+  if(ref $row eq 'HASH') {
     for my $key (keys %$row) {
       defined && /[^\000-\177]/ && Encode::_utf8_on($_) for $row->{$key};
     }
@@ -73,8 +74,9 @@ sub get_decoded_hashref {
 
 sub get_decoded_arrayref {
   my ($sth) = @_;
+  my $row = $sth->fetchrow_arrayref;
 
-  if(my $row = $sth->fetchrow_arrayref) {
+  if(ref $row eq 'ARRAY') {
     defined && /[^\000-\177]/ && Encode::_utf8_on($_) for @$row;
   }
 
