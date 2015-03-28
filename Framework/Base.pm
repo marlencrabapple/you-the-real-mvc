@@ -396,7 +396,7 @@ sub forbidden_unicode {
 
 sub encode_string {
   my ($str, $charset) = @_;
-  
+
   $charset = option('charset') unless $charset;
   return encode($charset, $str, 0x0400);
 }
@@ -501,15 +501,6 @@ sub js_string {
   $str =~ s/(\r\n|\r|\n)/\\n/g;
 
   return "'$str'";
-}
-
-sub js_array {
-  return "[" . (join ",", @_) . "]";
-}
-
-sub js_hash {
-  my %hash = @_;
-  return "{" . (join ",", map { "'$_':$hash{$_}" } keys %hash) . "}";
 }
 
 
