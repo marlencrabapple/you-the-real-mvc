@@ -60,11 +60,25 @@ sub table_exists {
 }
 
 sub get_decoded_hashref {
+  my ($sth) = @_;
 
+  if(my $row = $sth->fetchrow_hashref) {
+    for my $key (keys %$row) {
+      defined && /[^\000-\177]/ && Encode::_utf8_on($_) for $row->{$key};
+    }
+  }
+
+  return $row;
 }
 
 sub get_decoded_arrayref {
+  my ($sth) = @_;
 
+  if(my $row = $sth->fetchrow_arrayref) {
+    defined && /[^\000-\177]/ && Encode::_utf8_on($_) for @$row;
+  }
+
+  return $row;
 }
 
 sub error {
@@ -75,10 +89,6 @@ sub error {
 
   make_error($error) if $dieonerror && $Framework::req;
   return $error;
-}
-
-sub test {
-  die "test";
 }
 
 1;

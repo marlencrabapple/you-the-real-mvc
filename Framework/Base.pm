@@ -503,7 +503,6 @@ sub js_string {
   return "'$str'";
 }
 
-
 #
 # Crypto code
 #
