@@ -253,7 +253,7 @@ sub make_error {
 }
 
 sub is_ajax {
-  return 1 if $req->header('HTTP_X_REQUESTED_WITH') =~ /xmlhttprequest/i;
+  return 1 if $req->header('X-Requested-With') =~ /xmlhttprequest/i;
   return 0;
 }
 
