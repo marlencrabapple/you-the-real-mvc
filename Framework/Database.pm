@@ -59,6 +59,38 @@ sub table_exists {
   return 1;
 }
 
+sub init_table {
+  my ($self, $table, $columns) = @_;
+  my ($sth, @column_arr);
+
+  foreach my $column (@{$columns}) {
+    my $column_str = "`$$column{name}` " . ($$column{auto_increment} ?
+      get_autoincrement() : sub {
+        if($$column{type}) {
+          if($$column{type} eq 'ip') {
+            return 'TEXT' if option('sql_source') =~ /^DBI:SQLite/i;
+            return 'VARBINARY(16)' if option('sql_source') =~ /^DBI:MySQL/i;
+
+            # bytea(16) might be better if it actually works...
+            # No idea if this can detect an IP in binary either.
+            return 'inet' if option('sql_source') =~ /^DBI:Pg/i;
+            return 'TEXT';
+          }
+
+          return $$column{type}
+        }
+
+        return 'TEXT';
+      }->());
+
+    push @column_arr, $column_str;
+  }
+
+  $sth = $dbh->prepare("CREATE TABLE $table (" . join(',', @column_arr) . ")")
+    or $dbh->error();
+  $sth->execute();
+}
+
 sub get_decoded_hashref {
   my ($sth) = @_;
   my $row = $sth->fetchrow_hashref;
