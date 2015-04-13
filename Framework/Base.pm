@@ -217,6 +217,8 @@ sub res {
 
   $res->body(encode_string($content, option('charset')));
   $res->content_encoding('gzip') if option('gzip');
+  
+  push @{$headers}, @{make_cookies($cookies)};
 
   foreach my $header (@{$headers}) {
     $res->header($header);
