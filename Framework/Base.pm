@@ -202,7 +202,7 @@ sub request_handler {
 }
 
 sub res {
-  my ($content, $contenttype, $status, $headers, $return) = @_;
+  my ($content, $contenttype, $status, $cookies, $headers, $return) = @_;
 
   if(ref($content)) {
     $content = to_json($content, { pretty => option('pretty_json') });
@@ -250,6 +250,42 @@ sub make_error {
 
   set_res(res($res, $contenttype, ($status || 500), undef, $debug));
   die $_, $content;
+}
+
+sub make_cookies {
+  my ($cookies) = @_;
+
+  my $charset = $$cookies{'-charset'};
+  my $expires = ($$cookies{'-expires'} or time+14*24*3600);
+  my $autopath = $$cookies{'-autopath'};
+  my $path = $$cookies{'-path'};
+
+  my $date = make_date($expires, "cookie");
+
+  unless($path) {
+    if($autopath eq 'current') {
+      ($path) = $ENV{SCRIPT_NAME} =~ m!^(.*/)[^/]+$!
+    }
+    elsif($autopath eq 'parent') {
+      ($path) = $ENV{SCRIPT_NAME} =~ m!^(.*?/)(?:[^/]+/)?[^/]+$!
+    }
+    else {
+      $path = '/';
+    }
+  }
+
+  foreach my $name (keys %$cookies) {
+    next if($name =~ /^-/); # skip entries that start with a dash
+
+    my $value = $$cookies{$name};
+    $value = "" unless(defined $value);
+
+    $value = encode_cookie($value, $charset);
+
+    push @cookie_arr, "Set-Cookie: $name=$value; path=$path; expires=$date;\n";
+  }
+
+  return \@cookie_arr
 }
 
 sub is_ajax {
@@ -373,6 +409,18 @@ my $url_re = qr{(${protocol_re}[^\s<>()"]*?(?:\([^\s<>()"]*?\)[^\s<>()"]*?)*)((?
 sub protocol_regexp { return $protocol_re }
 
 sub url_regexp { return $url_re }
+
+sub parse_http_date {
+	my ($date) = @_;
+	my $months = { Jan => 0, Feb => 1, Mar=>2, Apr => 3, May => 4, Jun => 5,
+    Jul => 6, Aug => 7, Sep => 8, Oct => 9, Nov => 10, Dec => 11 };
+
+	if($date =~ /^[SMTWF][a-z][a-z], (\d\d) ([JFMASOND][a-z][a-z]) (\d\d\d\d) (\d\d):(\d\d):(\d\d) GMT$/) {
+    return eval { timegm($6, $5, $4, $1, $months{$2}, $3-1900) }
+  }
+
+	return undef;
+}
 
 #
 # Sanitation, serialization, etc.
@@ -503,6 +551,20 @@ sub js_string {
   return "'$str'";
 }
 
+sub encode_cookie {
+	my ($str) = @_;
+
+	$str = decode($charset, $str);
+	$str =~ s/&\#([0-9]+);/chr $1/ge;
+	$str =~ s/&\#x([0-9a-f]+);/chr hex $1/gei;
+	$str =~ s/([^0-9a-zA-Z])/
+		my $c=ord $1;
+		sprintf($c>255?'%%u%04x':'%%%02x',$c);
+	/sge;
+
+	return $str;
+}
+
 #
 # Crypto code
 #
@@ -534,6 +596,63 @@ sub password_hash {
 
 sub get_script_name {
   return $$env{SCRIPT_NAME}
+}
+
+sub make_date {
+	my ($time, $style, \@locdays) = @_;
+
+	my @days = qw(Sun Mon Tue Wed Thu Fri Sat);
+	my @months = qw(Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec);
+	@{$locdays} = @days unless(@{$locdays});
+
+	if($style eq "2ch") {
+		my @ltime = localtime($time);
+
+		return sprintf("%04d-%02d-%02d %02d:%02d",
+		  $ltime[5]+1900, $ltime[4]+1, $ltime[3], $ltime[2], $ltime[1]);
+	}
+	elsif($style eq "futaba" or $style eq "0") {
+		my @ltime = localtime($time);
+
+		return sprintf("%02d/%02d/%02d(%s)%02d:%02d",
+		  $ltime[5]-100, $ltime[4]+1, $ltime[3], $locdays[$ltime[6]], $ltime[2],$ltime[1]);
+	}
+	elsif($style eq "localtime") {
+		return scalar(localtime($time));
+	}
+	elsif($style eq "tiny") {
+		my @ltime = localtime($time);
+
+		return sprintf("%02d/%02d %02d:%02d",
+		  $ltime[4]+1, $ltime[3], $ltime[2], $ltime[1]);
+	}
+	elsif($style eq "http") {
+		my ($sec, $min, $hour, $mday, $mon, $year, $wday) = gmtime($time);
+
+    return sprintf("%s, %02d %s %04d %02d:%02d:%02d GMT",
+		  $days[$wday], $mday, $months[$mon], $year+1900, $hour, $min, $sec);
+	}
+	elsif($style eq "cookie") {
+		my ($sec, $min, $hour, $mday, $mon, $year, $wday) = gmtime($time);
+
+    return sprintf("%s, %02d-%s-%04d %02d:%02d:%02d GMT",
+		  $days[$wday], $mday, $months[$mon], $year+1900, $hour, $min, $sec);
+	}
+	elsif($style eq "month") {
+		my ($sec, $min, $hour, $mday, $mon, $year, $wday) = gmtime($time);
+
+    return sprintf("%s %d",
+		  $months[$mon], $year+1900);
+	}
+	elsif($style eq "2ch-sep93") {
+		my $sep93 = timelocal(0,0,0,1,8,93);
+		return make_date($time, "2ch") if($time < $sep93);
+
+		my @ltime = localtime($time);
+
+		return sprintf("%04d-%02d-%02d %02d:%02d",
+		  1993, 9,int ($time-$sep93)/86400+1, $ltime[2], $ltime[1]);
+	}
 }
 
 1;
