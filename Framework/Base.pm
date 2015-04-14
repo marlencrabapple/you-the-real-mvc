@@ -217,7 +217,7 @@ sub res {
 
   $res->body(encode_string($content, option('charset')));
   $res->content_encoding('gzip') if option('gzip');
-  
+
   push @{$headers}, @{make_cookies($cookies)};
 
   foreach my $header (@{$headers}) {
@@ -257,6 +257,7 @@ sub make_error {
 sub make_cookies {
   my ($cookies) = @_;
 
+  my @cookie_arr;
   my $charset = $$cookies{'-charset'};
   my $expires = ($$cookies{'-expires'} or time+14*24*3600);
   my $autopath = $$cookies{'-autopath'};
@@ -418,7 +419,7 @@ sub parse_http_date {
     Jul => 6, Aug => 7, Sep => 8, Oct => 9, Nov => 10, Dec => 11 };
 
 	if($date =~ /^[SMTWF][a-z][a-z], (\d\d) ([JFMASOND][a-z][a-z]) (\d\d\d\d) (\d\d):(\d\d):(\d\d) GMT$/) {
-    return eval { timegm($6, $5, $4, $1, $months{$2}, $3-1900) }
+    return eval { timegm($6, $5, $4, $1, $$months{$2}, $3-1900) }
   }
 
 	return undef;
@@ -556,7 +557,7 @@ sub js_string {
 sub encode_cookie {
 	my ($str) = @_;
 
-	$str = decode($charset, $str);
+	$str = decode(option('charset'), $str);
 	$str =~ s/&\#([0-9]+);/chr $1/ge;
 	$str =~ s/&\#x([0-9a-f]+);/chr hex $1/gei;
 	$str =~ s/([^0-9a-zA-Z])/
@@ -601,11 +602,11 @@ sub get_script_name {
 }
 
 sub make_date {
-	my ($time, $style, \@locdays) = @_;
+	my ($time, $style, $locdays) = @_;
 
 	my @days = qw(Sun Mon Tue Wed Thu Fri Sat);
 	my @months = qw(Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec);
-	@{$locdays} = @days unless(@{$locdays});
+	@{$locdays} = @days unless defined $locdays && ref $locdays eq 'ARRAY';
 
 	if($style eq "2ch") {
 		my @ltime = localtime($time);
@@ -617,7 +618,7 @@ sub make_date {
 		my @ltime = localtime($time);
 
 		return sprintf("%02d/%02d/%02d(%s)%02d:%02d",
-		  $ltime[5]-100, $ltime[4]+1, $ltime[3], $locdays[$ltime[6]], $ltime[2],$ltime[1]);
+		  $ltime[5]-100, $ltime[4]+1, $ltime[3], @{$locdays}[$ltime[6]], $ltime[2],$ltime[1]);
 	}
 	elsif($style eq "localtime") {
 		return scalar(localtime($time));
