@@ -66,7 +66,7 @@ sub route {
   $path = $prefix . $path if $prefix;
 
   foreach my $method (@{$methods}) {
-    push $$routes{$method}, {
+    push @{$$routes{$method}}, {
       handler => $sub,
       path_str => $path,
       path_arr => [
