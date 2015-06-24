@@ -231,12 +231,20 @@ sub res {
 }
 
 sub redirect {
-  my ($url, $code) = @_;
+  my ($url, $status, $cookies, $headers, $return) = @_;
 
   my $res = $req->new_response;
-  $res->redirect($url, ($code || 302));
+  $res->redirect($url, ($status || 302));
+
+  push @{$headers}, @{make_cookies($cookies)};
+
+  foreach my $header (@{$headers}) {
+    $res->header($header);
+  }
+
   set_res($res->finalize);
 
+  return $Framework::Base::res if $return;
   goto RES_OVERRIDE;
 }
 
