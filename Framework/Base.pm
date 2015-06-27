@@ -29,7 +29,7 @@ our @EXPORT = (
   qw(add_options option options add_strings string strings),
   qw(before_process_request before_dispatch request_handler),
   qw(get post route prefix res redirect get_res set_res is_ajax get_script_name),
-  qw(make_error compile_template template add_template),
+  qw(header cookie make_error compile_template template add_template),
   qw(decode_string encode_string clean_string urlenc escamp),
   qw(password_hash protocol_regexp url_regexp),
   qw(ip_info)
@@ -194,10 +194,10 @@ sub request_handler {
   catch {
     if(option('debug_mode')) {
       local $SIG{__DIE__} = 'DEFAULT'; # thanks http://blog.64p.org/entry/20101109/1289291797
-      die $_;
+      die $_
     }
 
-    return get_res() || make_error();
+    return get_res() || make_error()
   }
 }
 
@@ -218,34 +218,36 @@ sub res {
   $res->body(encode_string($content, option('charset')));
   $res->content_encoding('gzip') if option('gzip');
 
-  push @{$headers}, @{make_cookies($cookies)};
+  foreach my $key (keys %{$cookies}) {
+    $res->cookies->{$key} = $$cookies{$key}
+  }
 
   foreach my $header (@{$headers}) {
-    $res->header($header);
+    $res->header($header)
   }
 
   set_res($res->finalize);
 
   return $Framework::Base::res if $return;
-  goto RES_OVERRIDE;
+  goto RES_OVERRIDE
 }
 
 sub redirect {
-  my ($url, $status, $cookies, $headers, $return) = @_;
+  my ($url, $code) = @_;
 
   my $res = $req->new_response;
-  $res->redirect($url, ($status || 302));
-
-  push @{$headers}, @{make_cookies($cookies)};
-
-  foreach my $header (@{$headers}) {
-    $res->header($header);
-  }
-
+  $res->redirect($url, ($code || 302));
   set_res($res->finalize);
 
-  return $Framework::Base::res if $return;
-  goto RES_OVERRIDE;
+  goto RES_OVERRIDE
+}
+
+sub header {
+  $res->header($_[0])
+}
+
+sub cookie {
+  $res->cookies->{$$_[0]} = $__[1]
 }
 
 sub make_error {
@@ -260,43 +262,6 @@ sub make_error {
 
   set_res(res($res, $contenttype, ($status || 500), undef, $debug));
   die $_, $content;
-}
-
-sub make_cookies {
-  my ($cookies) = @_;
-
-  my @cookie_arr;
-  my $charset = $$cookies{'-charset'};
-  my $expires = ($$cookies{'-expires'} or time+14*24*3600);
-  my $autopath = $$cookies{'-autopath'};
-  my $path = $$cookies{'-path'};
-
-  my $date = make_date($expires, "cookie");
-
-  unless($path) {
-    if($autopath eq 'current') {
-      ($path) = $ENV{SCRIPT_NAME} =~ m!^(.*/)[^/]+$!
-    }
-    elsif($autopath eq 'parent') {
-      ($path) = $ENV{SCRIPT_NAME} =~ m!^(.*?/)(?:[^/]+/)?[^/]+$!
-    }
-    else {
-      $path = '/';
-    }
-  }
-
-  foreach my $name (keys %$cookies) {
-    next if($name =~ /^-/); # skip entries that start with a dash
-
-    my $value = $$cookies{$name};
-    $value = "" unless(defined $value);
-
-    $value = encode_cookie($value, $charset);
-
-    push @cookie_arr, "Set-Cookie: $name=$value; path=$path; expires=$date;\n";
-  }
-
-  return \@cookie_arr
 }
 
 sub is_ajax {
@@ -560,20 +525,6 @@ sub js_string {
   $str =~ s/(\r\n|\r|\n)/\\n/g;
 
   return "'$str'";
-}
-
-sub encode_cookie {
-	my ($str) = @_;
-
-	$str = decode(option('charset'), $str);
-	$str =~ s/&\#([0-9]+);/chr $1/ge;
-	$str =~ s/&\#x([0-9a-f]+);/chr hex $1/gei;
-	$str =~ s/([^0-9a-zA-Z])/
-		my $c=ord $1;
-		sprintf($c>255?'%%u%04x':'%%%02x',$c);
-	/sge;
-
-	return $str;
 }
 
 #
