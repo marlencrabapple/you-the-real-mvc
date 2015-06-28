@@ -117,6 +117,7 @@ sub request_handler {
 
   try {
     $req = Framework::Request->new($env);
+    $res = $req->new_response;
     $path = $req->path_info || '/';
     $method = $req->method;
     @path_arr = map { ($_ ne '') || ($_ eq "0") ? "$_" : () } split '/', $path;
@@ -197,6 +198,7 @@ sub request_handler {
       die $_
     }
 
+    $res = $req->new_response;
     return get_res() || make_error()
   }
 }
@@ -210,13 +212,12 @@ sub res {
       . option('charset') unless $contenttype
   }
 
-  my $res = $req->new_response($status || 200);
-
   $res->content_type($contenttype || ('text/html; charset='
     . option('charset')));
 
   $res->body(encode_string($content, option('charset')));
   $res->content_encoding('gzip') if option('gzip');
+  $res->status($status || 200);
 
   foreach my $key (keys %{$cookies}) {
     $res->cookies->{$key} = $$cookies{$key}
@@ -235,7 +236,6 @@ sub res {
 sub redirect {
   my ($url, $code) = @_;
 
-  my $res = $req->new_response;
   $res->redirect($url, ($code || 302));
   set_res($res->finalize);
 
@@ -247,11 +247,12 @@ sub header {
 }
 
 sub cookie {
-  $res->cookies->{$$_[0]} = $$_[1]
+  $res->cookies->{$_[0]} = $_[1];
 }
 
 sub make_error {
   my ($content, $status, $contenttype, $debug) = @_;
+  my $res;
 
   if(((is_ajax()) && (!$contenttype)) || (ref($content))) {
     $res = { error => $content }
