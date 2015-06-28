@@ -247,7 +247,7 @@ sub header {
 }
 
 sub cookie {
-  $res->cookies->{$$_[0]} = $__[1]
+  $res->cookies->{$$_[0]} = $$_[1]
 }
 
 sub make_error {
@@ -328,7 +328,7 @@ sub compile_template {
       else {
         if($name eq '!var') { $code .= '$res.=eval{' . $args . '};' }
         elsif($name eq 'var') { $code .= '$res.=clean_string(eval{' . $args . '});' }
-        elsif($name eq 'part') { $code .= '$res.=eval{template(' . $args . ')->()};' }
+        elsif($name eq 'part') { $code .= '$res.=eval{$$templates{' . $args . '}->()};' }
         elsif($name eq 'const') { my $const = eval $args; $const =~ s/(['\\])/\\$1/g; $code .= '$res.=\'' . $const . '\';' }
         elsif($name eq 'if') { $code .= 'if(eval{' . $args . '}){' }
         elsif($name eq 'loop')

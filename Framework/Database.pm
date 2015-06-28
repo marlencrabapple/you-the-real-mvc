@@ -92,7 +92,7 @@ sub init_table {
 }
 
 sub get_decoded_hashref {
-  my ($sth) = @_;
+  my ($self, $sth) = @_;
   my $row = $sth->fetchrow_hashref;
 
   if(ref $row eq 'HASH') {
@@ -105,7 +105,7 @@ sub get_decoded_hashref {
 }
 
 sub get_decoded_arrayref {
-  my ($sth) = @_;
+  my ($self, $sth) = @_;
   my $row = $sth->fetchrow_arrayref;
 
   if(ref $row eq 'ARRAY') {
