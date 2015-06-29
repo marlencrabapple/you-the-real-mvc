@@ -15,8 +15,8 @@ use Framework::Request;
 use Framework::Options;
 use Framework::Strings;
 
-our ($self, $env, $req, $res, $prefix, $templates, @prefixes, @before_process_request,
-  @before_dispatch);
+our ($self, $env, $req, $res, $prefix, $templates, $templateglobals, @prefixes,
+  @before_process_request, @before_dispatch);
 
 our $routes = {
   GET => [],
@@ -29,7 +29,7 @@ our @EXPORT = (
   qw(add_options option options add_strings string strings),
   qw(before_process_request before_dispatch request_handler),
   qw(get post route prefix res redirect get_res set_res is_ajax get_script_name),
-  qw(header cookie make_error compile_template template add_template),
+  qw(header cookie make_error compile_template template add_template template_var),
   qw(decode_string encode_string clean_string urlenc escamp),
   qw(password_hash protocol_regexp url_regexp),
   qw(ip_info)
@@ -114,6 +114,7 @@ sub request_handler {
   my ($self, $env) = @_;
   my ($match, $method, $path, @path_arr, $queryvars);
   ($Framework::Base::self, $Framework::Base::env) = ($self, $env);
+  $templateglobals = {};
 
   try {
     $req = Framework::Request->new($env);
@@ -350,6 +351,7 @@ sub compile_template {
       #. 'my $section=get_section();'
       . $code
       . '$$_=$__ov{$_} for(keys %__ov);'
+      . 'my $v=$templateglobals;'
       #. 'return !$minify ? $res : minify_html($res); }';
       . 'return $res; }';
 
@@ -374,6 +376,15 @@ sub include {
   $file = minify_html($file) unless $nostrip;
 
   return $file;
+}
+
+sub template_var {
+  my ($key, $val) = @_;
+  $$templateglobals{$key} = $val
+}
+
+sub tv {
+  return $$templateglobals{$_[0]}
 }
 
 #
