@@ -248,7 +248,7 @@ sub header {
 }
 
 sub cookie {
-  $res->cookies->{$_[0]} = $_[1];
+  $res->cookies->{$_[0]} = $_[1]
 }
 
 sub make_error {
