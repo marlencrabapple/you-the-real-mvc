@@ -341,11 +341,11 @@ sub compile_template {
 
   if(!$part) {
     $sub = eval 'no strict; sub { '
-      . 'my $port=$ENV{SERVER_PORT}==80?"":":$ENV{SERVER_PORT}";'
-      . 'my $self=$ENV{SCRIPT_NAME};'
-      . 'my $absolute_self="http://$ENV{SERVER_NAME}$port$ENV{SCRIPT_NAME}";'
-      . 'my ($path)=$ENV{SCRIPT_NAME}=~m!^(.*/)[^/]+$!;'
-      . 'my $absolute_path="http://$ENV{SERVER_NAME}$port$path";'
+      #. 'my $port=$ENV{SERVER_PORT}==80?"":":$ENV{SERVER_PORT}";'
+      #. 'my $self=$ENV{SCRIPT_NAME};'
+      #. 'my $absolute_self="http://$ENV{SERVER_NAME}$port$ENV{SCRIPT_NAME}";'
+      #. 'my ($path)=$ENV{SCRIPT_NAME}=~m!^(.*/)[^/]+$!;'
+      #. 'my $absolute_path="http://$ENV{SERVER_NAME}$port$path";'
       . 'my %__v=@_;my %__ov;for(keys %__v){$__ov{$_}=$$_;$$_=$__v{$_};}'
       . 'my $res;'
       #. 'my $section=get_section();'
