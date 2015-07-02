@@ -30,7 +30,7 @@ our @EXPORT = (
   qw(before_process_request before_dispatch request_handler),
   qw(get post route prefix res redirect get_res set_res is_ajax get_script_name),
   qw(header cookie make_error compile_template template add_template template_var),
-  qw(decode_string encode_string clean_string urlenc escamp),
+  qw(decode_string encode_string clean_string urlenc escamp make_date),
   qw(password_hash protocol_regexp url_regexp),
   qw(ip_info)
 );
@@ -112,9 +112,11 @@ sub get_res {
 
 sub request_handler {
   my ($self, $env) = @_;
-  my ($match, $method, $path, @path_arr, $queryvars);
+  my ($match, $method, $path, @path_arr, $queryvars, $session);
   ($Framework::Base::self, $Framework::Base::env) = ($self, $env);
   $templateglobals = {};
+  $$env{session} = {};
+  $session = $$env{session};
 
   try {
     $req = Framework::Request->new($env);
@@ -188,9 +190,7 @@ sub request_handler {
       $sub->($req, $queryvars, $path, \@path_arr)
     }
 
-    # Maybe $queryvars and $req should be globals? It would cut down on some
-    # boiler plate code...
-    return $match->{handler}->($queryvars, $req) if $match != 0;
+    return $match->{handler}->($queryvars, $session, $req) if $match != 0;
     make_error(string('s_invalidpath'), 404);
   }
   catch {
@@ -627,6 +627,9 @@ sub make_date {
 		return sprintf("%04d-%02d-%02d %02d:%02d",
 		  1993, 9,int ($time-$sep93)/86400+1, $ltime[2], $ltime[1]);
 	}
+  else {
+    return make_date($time, 'tiny', $locdays)
+  }
 }
 
 1;
