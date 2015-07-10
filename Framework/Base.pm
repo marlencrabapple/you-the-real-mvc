@@ -30,7 +30,7 @@ our @EXPORT = (
   qw(before_process_request before_dispatch request_handler),
   qw(get post route prefix res redirect get_res set_res is_ajax get_script_name),
   qw(header cookie make_error compile_template template add_template template_var),
-  qw(decode_string encode_string clean_string urlenc escamp make_date),
+  qw(decode_string encode_string clean_string urlenc escamp make_date abbreviate_html),
   qw(password_hash protocol_regexp url_regexp),
   qw(ip_info)
 );
@@ -399,15 +399,15 @@ sub protocol_regexp { return $protocol_re }
 sub url_regexp { return $url_re }
 
 sub parse_http_date {
-	my ($date) = @_;
-	my $months = { Jan => 0, Feb => 1, Mar=>2, Apr => 3, May => 4, Jun => 5,
+  my ($date) = @_;
+  my $months = { Jan => 0, Feb => 1, Mar=>2, Apr => 3, May => 4, Jun => 5,
     Jul => 6, Aug => 7, Sep => 8, Oct => 9, Nov => 10, Dec => 11 };
 
-	if($date =~ /^[SMTWF][a-z][a-z], (\d\d) ([JFMASOND][a-z][a-z]) (\d\d\d\d) (\d\d):(\d\d):(\d\d) GMT$/) {
+  if($date =~ /^[SMTWF][a-z][a-z], (\d\d) ([JFMASOND][a-z][a-z]) (\d\d\d\d) (\d\d):(\d\d):(\d\d) GMT$/) {
     return eval { timegm($6, $5, $4, $1, $$months{$2}, $3-1900) }
   }
 
-	return undef;
+  return undef;
 }
 
 #
@@ -480,6 +480,45 @@ sub clean_string {
   $str =~ s/[\x00-\x08\x0b\x0c\x0e-\x1f]//g; # remove control chars
 
   return $str;
+}
+
+sub abbreviate_html {
+  my ($html, $max_lines, $approx_len) = @_;
+  my ($lines, $chars, @stack);
+
+  return undef unless($max_lines);
+
+  while($html =~ m!(?:([^<]+)|<(/?)(\w+).*?(/?)>)!g) {
+    my ($text, $closing, $tag, $implicit) = ($1, $2, lc($3), $4);
+
+    if($text) {
+      $chars += length $text;
+    }
+    else {
+      push @stack, $tag if(!$closing and !$implicit);
+      pop @stack if($closing);
+
+      if(($closing or $implicit) and ($tag eq "p" or $tag eq "blockquote" or $tag eq "pre"
+        or $tag eq "li" or $tag eq "ol" or $tag eq "ul" or $tag eq "br")) {
+        $lines += int($chars / $approx_len) + 1;
+        $lines++ if($tag eq "p" or $tag eq "blockquote");
+        $chars = 0;
+      }
+
+      if($lines >= $max_lines) {
+        # check if there's anything left other than end-tags
+        return undef if (substr $html, pos $html) =~ m!^(?:\s*</\w+>)*\s*$!s;
+
+        my $abbrev = substr $html, 0, pos $html;
+
+        while(my $tag = pop @stack) {
+          $abbrev .= "</$tag>" unless $tag eq "br";
+        }
+      }
+    }
+  }
+
+  return undef;
 }
 
 sub escamp {
@@ -573,60 +612,60 @@ sub get_script_name {
 }
 
 sub make_date {
-	my ($time, $style, $locdays) = @_;
+  my ($time, $style, $locdays) = @_;
 
-	my @days = qw(Sun Mon Tue Wed Thu Fri Sat);
-	my @months = qw(Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec);
-	@{$locdays} = @days unless defined $locdays && ref $locdays eq 'ARRAY';
+  my @days = qw(Sun Mon Tue Wed Thu Fri Sat);
+  my @months = qw(Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec);
+  @{$locdays} = @days unless defined $locdays && ref $locdays eq 'ARRAY';
 
-	if($style eq "2ch") {
-		my @ltime = localtime($time);
+  if($style eq "2ch") {
+    my @ltime = localtime($time);
 
-		return sprintf("%04d-%02d-%02d %02d:%02d",
-		  $ltime[5]+1900, $ltime[4]+1, $ltime[3], $ltime[2], $ltime[1]);
-	}
-	elsif($style eq "futaba" or $style eq "0") {
-		my @ltime = localtime($time);
+    return sprintf("%04d-%02d-%02d %02d:%02d",
+      $ltime[5]+1900, $ltime[4]+1, $ltime[3], $ltime[2], $ltime[1]);
+  }
+  elsif($style eq "futaba" or $style eq "0") {
+    my @ltime = localtime($time);
 
-		return sprintf("%02d/%02d/%02d(%s)%02d:%02d",
-		  $ltime[5]-100, $ltime[4]+1, $ltime[3], @{$locdays}[$ltime[6]], $ltime[2],$ltime[1]);
-	}
-	elsif($style eq "localtime") {
-		return scalar(localtime($time));
-	}
-	elsif($style eq "tiny") {
-		my @ltime = localtime($time);
+    return sprintf("%02d/%02d/%02d(%s)%02d:%02d",
+      $ltime[5]-100, $ltime[4]+1, $ltime[3], @{$locdays}[$ltime[6]], $ltime[2],$ltime[1]);
+  }
+  elsif($style eq "localtime") {
+    return scalar(localtime($time));
+  }
+  elsif($style eq "tiny") {
+    my @ltime = localtime($time);
 
-		return sprintf("%02d/%02d %02d:%02d",
-		  $ltime[4]+1, $ltime[3], $ltime[2], $ltime[1]);
-	}
-	elsif($style eq "http") {
-		my ($sec, $min, $hour, $mday, $mon, $year, $wday) = gmtime($time);
+    return sprintf("%02d/%02d %02d:%02d",
+      $ltime[4]+1, $ltime[3], $ltime[2], $ltime[1]);
+  }
+  elsif($style eq "http") {
+    my ($sec, $min, $hour, $mday, $mon, $year, $wday) = gmtime($time);
 
     return sprintf("%s, %02d %s %04d %02d:%02d:%02d GMT",
-		  $days[$wday], $mday, $months[$mon], $year+1900, $hour, $min, $sec);
-	}
-	elsif($style eq "cookie") {
-		my ($sec, $min, $hour, $mday, $mon, $year, $wday) = gmtime($time);
+      $days[$wday], $mday, $months[$mon], $year+1900, $hour, $min, $sec);
+  }
+  elsif($style eq "cookie") {
+    my ($sec, $min, $hour, $mday, $mon, $year, $wday) = gmtime($time);
 
     return sprintf("%s, %02d-%s-%04d %02d:%02d:%02d GMT",
-		  $days[$wday], $mday, $months[$mon], $year+1900, $hour, $min, $sec);
-	}
-	elsif($style eq "month") {
-		my ($sec, $min, $hour, $mday, $mon, $year, $wday) = gmtime($time);
+      $days[$wday], $mday, $months[$mon], $year+1900, $hour, $min, $sec);
+  }
+  elsif($style eq "month") {
+    my ($sec, $min, $hour, $mday, $mon, $year, $wday) = gmtime($time);
 
     return sprintf("%s %d",
-		  $months[$mon], $year+1900);
-	}
-	elsif($style eq "2ch-sep93") {
-		my $sep93 = timelocal(0,0,0,1,8,93);
-		return make_date($time, "2ch") if($time < $sep93);
+      $months[$mon], $year+1900);
+  }
+  elsif($style eq "2ch-sep93") {
+    my $sep93 = timelocal(0,0,0,1,8,93);
+    return make_date($time, "2ch") if($time < $sep93);
 
-		my @ltime = localtime($time);
+    my @ltime = localtime($time);
 
-		return sprintf("%04d-%02d-%02d %02d:%02d",
-		  1993, 9,int ($time-$sep93)/86400+1, $ltime[2], $ltime[1]);
-	}
+    return sprintf("%04d-%02d-%02d %02d:%02d",
+      1993, 9,int ($time-$sep93)/86400+1, $ltime[2], $ltime[1]);
+  }
   else {
     return make_date($time, 'tiny', $locdays)
   }
